@@ -3,7 +3,7 @@ package aoc
 import scala.annotation.tailrec
 import scala.io.Source
 
-object Task01 {
+object Day01 {
   def main(args: Array[String]): Unit = {
     val input = Source
       .fromResource("input-01.data")
@@ -17,21 +17,25 @@ object Task01 {
     println(s"Solution 1: $solution1")
 
     @tailrec
-    def findTwice(current: Int = 0, set: Set[Int] = Set(), i: List[Int] = input): Option[Int] = {
-      if (set.contains(current))
+    def findTwice(current: Int = 0, set: Set[Int] = Set(), i: List[Int] = input, index: Int = 0, limit: Int = -1): Option[Int] = {
+      if (set.contains(current)) {
+        println(set)
         Some(current)
-      else {
+      } else if (limit < 0 || index < limit) {
         i match {
           case h :: tail =>
-            findTwice(current + h, set + current, tail)
+            findTwice(current + h, set + current, tail, index + 1, limit)
           case _ =>
-            findTwice(current, set, input)
+            findTwice(current, set, input, index, limit)
         }
-      }
+      } else
+          None
     }
 
     val solution2 = findTwice()
 
     println(s"Solution 2: ${solution2.get}")
+
+    println(s"+3 -2: ${findTwice(i = List(3, -1), limit = 100)}")
   }
 }
