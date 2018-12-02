@@ -62,9 +62,9 @@ object Day02 {
       val map = helper()
       val size = map.size
       size match {
-        case 0    => solve2(index + 1)
-        case 1    => map.toIterator.next._1
-        case _ @m => sys.error(s"invalid solution: $m")
+        case 0 => solve2(index + 1)
+        case 1 => map.toIterator.next._1
+        case _ => sys.error(s"invalid solution: $map")
       }
     }
 
