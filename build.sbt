@@ -1,3 +1,5 @@
+enablePlugins(JmhPlugin)
+
 name := "AdventOfCode2018"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
