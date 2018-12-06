@@ -15,7 +15,7 @@ object Day06 {
 
     def +(point: Point): Point =
       Point(x + point.x, y + point.y)
-    
+
     def -(value: Int): Point =
       Point(x - value, y - value)
 
@@ -55,7 +55,7 @@ object Day06 {
 
     val L = Math.max(pointMin.distanceFrom(center), pointMax.distanceFrom(center))
 
-    def makeBorder(l: Int) = {
+    def makeBorder(l: Int) =
       (
         (
           for {
@@ -74,13 +74,14 @@ object Day06 {
             y <- (center.y - l) to (center.y + l)
           } yield Point(center.x + l, y)
         )
-      )
-        .toSet
-        .toList
-    }
+      ).toSet.toList
 
     @tailrec
-    def area(l: Int = 0, areaMap: Map[Point, Int] = Map.empty, candidateMap: Map[Point, Int] = Map.empty): (Point, Int) = {
+    def area(
+      l: Int = 0,
+      areaMap: Map[Point, Int] = Map.empty,
+      candidateMap: Map[Point, Int] = Map.empty
+    ): (Point, Int) = {
       val b = makeBorder(l)
 
       val border = b
@@ -104,13 +105,12 @@ object Day06 {
         .foldLeft(areaMap) { (acc, value) =>
           value match {
             case (Some(point), _) => acc + (point -> (acc.getOrElse(point, 0) + 1))
-            case (None, _) => acc
+            case (None, _)        => acc
           }
         }
 
       if (l > L && newCandidateMap.isEmpty == false && newCandidateMap == candidateMap)
-        candidateMap.maxBy { _._2 }
-      else {
+        candidateMap.maxBy { _._2 } else {
         area(l + 1, newAreaMap, newCandidateMap)
       }
     }
@@ -125,9 +125,7 @@ object Day06 {
 
       val newCount = b
         .map { point =>
-          input
-            .map { point.distanceFrom(_) }
-            .sum
+          input.map { point.distanceFrom(_) }.sum
         }
         .filter(_ < limit)
         .size
