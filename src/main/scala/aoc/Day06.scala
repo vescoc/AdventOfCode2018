@@ -68,8 +68,8 @@ object Day06 {
             value._2
           else
             acc
-          else
-            acc
+        else
+          acc
       }
 
     println(s"solution 1: $solution1")
@@ -82,12 +82,9 @@ object Day06 {
         } yield {
           val point = Point(x, y)
 
-          input
-            .map { point.distanceFrom(_) }
-            .sum
+          input.map { point.distanceFrom(_) }.sum
         }
-      )
-        .filter(_ < limit)
+      ).filter(_ < limit)
         .size
 
     val solution2 = region(width, height)

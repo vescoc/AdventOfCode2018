@@ -38,11 +38,11 @@ object Day03Pure {
               case None =>
                 (a, map + ((x, y) -> Set(r.id)))
               case Some(set) =>
-                (if (set.size == 1) a + 1 else a,  map + ((x, y) -> (set + r.id)))
+                (if (set.size == 1) a + 1 else a, map + ((x, y) -> (set + r.id)))
             }
           }
 
-          val (nx, ny) =  {
+          val (nx, ny) = {
             if (x + 1 == r.x + r.w)
               (r.x, y + 1)
             else

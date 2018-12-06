@@ -16,7 +16,7 @@ object Day05 {
       val buffer = new StringBuilder(input)
 
       @tailrec
-      def analize(index: Int = 0): Unit = {
+      def analize(index: Int = 0): Unit =
         if (index < buffer.size - 1) {
           if (Math.abs(buffer.charAt(index) - buffer.charAt(index + 1)) == delta) {
             buffer.deleteCharAt(index)
@@ -29,9 +29,8 @@ object Day05 {
                 index - 1
             )
           } else
-              analize(index + 1)
+            analize(index + 1)
         }
-      }
 
       analize()
 
@@ -51,7 +50,6 @@ object Day05 {
         react(newInput)
       }
     }.min
-
 
     println(s"solution 2: $solve2")
   }
