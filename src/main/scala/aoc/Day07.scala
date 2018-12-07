@@ -4,20 +4,28 @@ import scala.annotation.tailrec
 import scala.io.Source
 
 object Day07 {
+  val TRACE = false
+
   val StepRe = """Step ([A-Z]) must be finished before step ([A-Z]) can begin.""".r
 
   case class Worker(workingOn: Option[(Char, Int)] = None) {
-    def assign(workingOn: (Char, Int)) = Worker(Some(workingOn))
+    def assign(time: Int, work: Char) = Worker(Some((work, time + work - 'A' + 1 + 60)))
 
     def tick(time: Int) =
       workingOn match {
         case None =>
           (None, this)
-        case Some((value, startTime)) =>
-          if (startTime + time > 60 + (value.toInt - 'A' + 1))
+        case Some((value, endTime)) =>
+          if (time >= endTime)
             (Some(value), Worker())
           else
             (None, this)
+      }
+
+    override def toString() =
+      workingOn match {
+        case Some((c, t)) => s"Worker($c,s=${t - (c - 'A' + 1 + 60)},e=$t)"
+        case None         => "Worker()"
       }
   }
 
@@ -28,7 +36,10 @@ object Day07 {
       .foldLeft(Map.empty[Char, Set[Char]]) { (acc, line) =>
         line match {
           case StepRe(master, slave) =>
-            acc + (slave(0) -> (acc.getOrElse(slave(0), Set.empty) + master(0))) + (master(0) -> acc.getOrElse(master(0), Set.empty))
+            acc + (slave(0) -> (acc.getOrElse(slave(0), Set.empty) + master(0))) + (master(0) -> acc.getOrElse(
+              master(0),
+              Set.empty
+            ))
         }
       }
 
@@ -38,9 +49,10 @@ object Day07 {
       dependencies: Map[Char, Set[Char]] = dependencies,
       steps: String = "",
       idle: List[Worker] = List.fill(1) { Worker() },
-      working: List[Worker] = List.empty): String =
+      working: List[Worker] = List.empty
+    ): (String, Int) =
       if (dependencies.isEmpty && working.isEmpty)
-        steps
+        (steps, time - 1)
       else {
         @tailrec
         def doWork(
@@ -50,34 +62,69 @@ object Day07 {
           newWorking: List[Worker] = List.empty,
           newIdle: List[Worker] = List.empty,
           completedSteps: Set[Char] = Set.empty
-        ): (Set[Char], List[Worker], List[Worker]) = {
+        ): (Map[Char, Set[Char]], Set[Char], List[Worker], List[Worker]) =
           working match {
             case worker :: workers =>
               worker.tick(time) match {
-                case (Some(value), w) =>
-                  doWork(dependencies, workers, w :: idle, newWorking, newIdle, completedSteps + value)
+                case (Some(step), w) =>
+                  val newDependencies = ((dependencies - step).map { p =>
+                    p._1 -> (p._2 - step)
+                  })
+                  doWork(newDependencies, workers, w :: idle, newWorking, newIdle, completedSteps + step)
                 case (None, w) =>
                   doWork(dependencies, workers, idle, w :: newWorking, newIdle, completedSteps)
               }
+            case Nil =>
+              if (dependencies.isEmpty)
+                (dependencies, completedSteps, newWorking, newIdle ++ idle)
+              else
+                idle match {
+                  case h :: t =>
+                    val running = newWorking
+                      .map { _.workingOn }
+                      .collect { case Some((step, _)) => step }
+
+                    val steps = dependencies
+                      .filter { _._2.isEmpty }
+                      .map { _._1 }
+                      .toSet -- running
+
+                    if (steps.isEmpty)
+                      (dependencies, completedSteps, newWorking, newIdle ++ idle)
+                    else
+                      doWork(dependencies, Nil, t, h.assign(time, steps.min) :: newWorking, newIdle, completedSteps)
+                  case Nil =>
+                    (dependencies, completedSteps, newWorking, newIdle)
+                }
           }
+
+        val (newDependencies, completedSteps, newWorking, newIdle) = doWork()
+
+        if (TRACE) {
+          println(s"time: $time")
+          println(s"  dependencies: $dependencies")
+          println(s"  steps: $steps")
+          println(s"  working: $working")
+          println(s"  idle: $idle")
+          println(s"  newDependencies: $newDependencies")
+          println(s"  completedSteps: $completedSteps")
+          println(s"  newWorking: $newWorking")
+          println(s"  newIdle: $newIdle")
         }
 
-        val (completedSteps, newWorking, newIdle) = doWork()
-
-        val step = dependencies
-          .filter { _._2.isEmpty }
-          .map { _._1 }
-          .min
+        val step = completedSteps.toList.sortBy { _.toInt }.mkString
 
         solve(
           time + 1,
-          ((dependencies - step).map { p => p._1 -> (p._2 - step) }),
+          newDependencies,
           steps + step,
-          idle,
-          working
+          newIdle,
+          newWorking
         )
       }
 
-    println(s"solution 1: ${solve()}")
+    println(s"solution 1: ${solve()._1}")
+
+    println(s"solution 2: ${solve(idle = List.fill(6) { Worker() })._2}")
   }
 }
