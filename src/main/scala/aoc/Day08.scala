@@ -18,17 +18,19 @@ object Day08 {
     case class Node(children: Int, metadata: Int) {
       def childDone() = copy(children = children - 1)
     }
-    
+
     def solution1: Int = {
       val iterator = input.toIterator
       if (TailRec) {
         @tailrec
-        def parseNodes(sum: Int = 0, stack: List[Node] = List.empty): Int = {
+        def parseNodes(sum: Int = 0, stack: List[Node] = List.empty): Int =
           if (iterator.hasNext) {
             stack match {
               case node :: tail =>
                 if (node.children == 0) {
-                  val newSum = (1 to node.metadata).foldLeft(sum) { (acc, _) => acc + iterator.next }
+                  val newSum = (1 to node.metadata).foldLeft(sum) { (acc, _) =>
+                    acc + iterator.next
+                  }
 
                   parseNodes(newSum, tail)
                 } else {
@@ -46,18 +48,21 @@ object Day08 {
           } else {
             sum
           }
-        }
 
         parseNodes()
       } else {
         def parseNode(): Int = {
           @inline
-          def parseNodes(quantity: Int): Int = (1 to quantity).foldLeft(0) { (acc, _) => acc + parseNode() }
+          def parseNodes(quantity: Int): Int = (1 to quantity).foldLeft(0) { (acc, _) =>
+            acc + parseNode()
+          }
 
           val childQuantity = iterator.next
           val metadataQuantity = iterator.next
 
-          (1 to metadataQuantity).foldLeft(parseNodes(childQuantity)) { (acc, _) => acc + iterator.next }
+          (1 to metadataQuantity).foldLeft(parseNodes(childQuantity)) { (acc, _) =>
+            acc + iterator.next
+          }
         }
 
         parseNode()
@@ -69,15 +74,16 @@ object Day08 {
 
       if (TailRec) {
         @tailrec
-        def parseNodes(values: Seq[Int] = List.empty, stack: List[(Node, Seq[Int])] = List.empty): Int = {
+        def parseNodes(values: Seq[Int] = List.empty, stack: List[(Node, Seq[Int])] = List.empty): Int =
           if (iterator.hasNext) {
             stack match {
               case (node, list) :: tail =>
                 if (node.children == 0) {
                   val checksum =
                     if (values.isEmpty)
-                      (1 to node.metadata).foldLeft(0) { (acc, _) => acc + iterator.next }
-                    else
+                      (1 to node.metadata).foldLeft(0) { (acc, _) =>
+                        acc + iterator.next
+                      } else
                       (1 to node.metadata).foldLeft(0) { (acc, _) =>
                         val index = iterator.next - 1
                         acc + (Try { values(index) } getOrElse 0)
@@ -99,14 +105,15 @@ object Day08 {
           } else {
             values(0)
           }
-        }
 
-        parseNodes()        
+        parseNodes()
       } else {
         def parseNode(): Int = {
           def parseNodes(quantity: Int): List[Int] =
             (1 to quantity)
-              .foldLeft(List.empty[Int]) { (acc, _) => parseNode() :: acc }
+              .foldLeft(List.empty[Int]) { (acc, _) =>
+                parseNode() :: acc
+              }
               .reverse
 
           val childQuantity = iterator.next
@@ -114,14 +121,15 @@ object Day08 {
 
           childQuantity match {
             case 0 =>
-              (1 to metadataQuantity).foldLeft(0) { (acc, _) => acc + iterator.next }
+              (1 to metadataQuantity).foldLeft(0) { (acc, _) =>
+                acc + iterator.next
+              }
             case _ =>
               val children = parseNodes(childQuantity)
-                (1 to metadataQuantity).foldLeft(0) { (acc, _) =>
-                  val index = iterator.next - 1
-                  val value = if (index >= 0 && index < children.size) children(index) else 0
-                  acc + value
-                }
+              (1 to metadataQuantity).foldLeft(0) { (acc, _) =>
+                val index = iterator.next - 1
+                acc + (Try { children(index) } getOrElse 0)
+              }
           }
         }
 
