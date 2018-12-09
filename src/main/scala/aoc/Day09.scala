@@ -39,20 +39,20 @@ object Day09 {
       Try {
         (args(0).toLong, args(1).toLong, Try { args(2).toBoolean } getOrElse false)
       }.getOrElse {
-          Source
-            .fromResource("input-09.data")
-            .getLines()
-            .map {
-              _ match {
-                case re(players, lastMarble) => (players.toLong, lastMarble.toLong, false)
-              }
+        Source
+          .fromResource("input-09.data")
+          .getLines()
+          .map {
+            _ match {
+              case re(players, lastMarble) => (players.toLong, lastMarble.toLong, false)
             }
-            .next
-        }
+          }
+          .next
+      }
 
     def solve(Players: Long = players, LastMarble: Long = lastMarble) = {
-      val info = (1 to LastMarble.toInt)
-        .map { _.toLong }
+      val info = Stream
+        .range(1L, LastMarble)
         .foldLeft(Info(Bucket(0), Map.empty)) { (acc, marble) =>
           if (trace)
             println(acc)
