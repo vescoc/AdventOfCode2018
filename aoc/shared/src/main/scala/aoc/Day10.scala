@@ -13,4 +13,14 @@ object Day10 {
     def time(t: Int): Star =
       copy(p = Point(p.x + v.dx * t, p.y + v.dy * t))
   }
+
+  val input = Source
+    .fromResource("input-10.data")
+    .getLines()
+    .map {
+      _ match {
+        case re(x, y, vx, vy) =>
+          Star(Point(x.toInt, y.toInt), Velocity(vx.toInt, vy.toInt))
+      }
+    }.toList
 }

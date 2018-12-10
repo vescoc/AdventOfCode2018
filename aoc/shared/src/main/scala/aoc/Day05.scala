@@ -1,7 +1,6 @@
 package aoc
 
 import scala.annotation.tailrec
-import scala.io.Source
 
 object Day05 {
   def main(args: Array[String]): Unit = {

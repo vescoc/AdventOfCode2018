@@ -1,7 +1,6 @@
 package aoc
 
 import scala.annotation.tailrec
-import scala.io.Source
 
 object Day03Pure {
   val re = """#(\d+) @ (\d+),(\d+): (\d+)x(\d+)""".r

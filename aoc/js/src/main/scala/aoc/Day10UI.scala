@@ -9,13 +9,6 @@ import aoc.Day10._
 
 object Day10UI {
   def main(args: Array[String]): Unit = {
-    val input = Input10.content.lines.map {
-      _ match {
-        case re(x, y, vx, vy) =>
-          Star(Point(x.toInt, y.toInt), Velocity(vx.toInt, vy.toInt))
-      }
-    }.toList
-
     val currentTimeParagraph = document.createElement("p").asInstanceOf[html.Paragraph]
     document.body.appendChild(currentTimeParagraph)
 

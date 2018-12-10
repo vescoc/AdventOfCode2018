@@ -1,6 +1,5 @@
 package aoc
 
-import scala.io.Source
 import scala.collection.mutable
 
 object Day03 {

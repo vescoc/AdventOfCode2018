@@ -1,7 +1,5 @@
 package aoc
 
-import scala.io.Source
-
 object Day04 {
   val GuardBeginShiftRe = """\[(\d+)-(\d+)-(\d+) (\d+):(\d+)\] Guard #(\d+) begins shift""".r
   val FallsAsleepRe = """\[(\d+)-(\d+)-(\d+) (\d+):(\d+)\] falls asleep""".r
