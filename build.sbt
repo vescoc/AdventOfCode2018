@@ -1,3 +1,5 @@
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+
 import java.io.{File, FileFilter}
 
 lazy val testLibraryDependencies = Seq(
@@ -21,19 +23,22 @@ lazy val commonSettings = Seq(
   excludeFilter in unmanagedSources := HiddenFileFilter || ".#*" || "*~"
 )
 
-lazy val scalajs = (project in file("scalajs"))
-  .enablePlugins(ScalaJSPlugin)
-  .settings (
-    name := "AdventOfCode2018-scalajs",
-    libraryDependencies ++= testLibraryDependencies ++
-      Seq("org.scala-js" %%% "scalajs-dom" % "0.9.6"),
+lazy val root = project.in(file("."))
+
+lazy val aoc = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Full)
+  .settings(
+    commonSettings
+  )
+  .jsSettings(
+    libraryDependencies ++= Seq("org.scala-js" %%% "scalajs-dom" % "0.9.6"),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
     scalaJSUseMainModuleInitializer := true,
     packageJSDependencies / skip := false,
     Compile / sourceGenerators += Def.task {
       val re = s"""input-(\\d+)\\.data""".r
 
-      val baseDir = baseDirectory.value / "src/main/resources"
+      val baseDir = (root / baseDirectory).value / "aoc" / "resources"
       val sourceDir = (Compile / sourceManaged).value
 
       val sources = for {
@@ -55,17 +60,17 @@ lazy val scalajs = (project in file("scalajs"))
             s"Input$n"
         }
 
-        val sourceFile = sourceDir / s"${name}.scala" 
+        val sourceFile = sourceDir / s"${name}.scala"
 
         if (!sourceFile.exists() || sourceFile.lastModified() < resourceFile.lastModified()) {
           val content = IO.read(resourceFile)
 
           val scalaCode = s"""|package aoc
-          |
-          |object $name {
-          |  final val content = raw\"\"\"$content\"\"\"
-          |}
-          |""".stripMargin
+                              |
+                              |object $name {
+                              |  final val content = raw\"\"\"$content\"\"\"
+                              |}
+                              |""".stripMargin
 
           IO.write(sourceFile, scalaCode)
         }
@@ -74,15 +79,20 @@ lazy val scalajs = (project in file("scalajs"))
       }
 
       sources.toSeq
-    }.taskValue,
-    commonSettings
+    }.taskValue
+  )
+  .jvmSettings(
+    libraryDependencies ++= testLibraryDependencies
   )
 
-lazy val root = (project in file("."))
+lazy val aocJS = aoc
+  .js
+  .enablePlugins(ScalaJSPlugin)
+
+lazy val aocJVM = aoc
+  .jvm
   .settings(
-    name := "AdventOfCode2018",
-    libraryDependencies ++= testLibraryDependencies,
-    commonSettings
+    Compile / unmanagedResourceDirectories += (root / baseDirectory).value / "aoc" / "resources"
   )
 
 excludeFilter in unmanagedSources := HiddenFileFilter || ".#*" || "*~"
