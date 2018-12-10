@@ -29,7 +29,6 @@ object Day01 {
       limit: Int = -1
     ): Option[Int] =
       if (set.contains(current)) {
-        println(set)
         Some(current)
       } else if (limit < 0 || index < limit) {
         i match {
