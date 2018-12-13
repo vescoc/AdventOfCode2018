@@ -81,18 +81,23 @@ lazy val aoc = crossProject(JSPlatform, JVMPlatform)
       sources.toSeq
     }.taskValue
   )
-  .jvmSettings(
-    libraryDependencies ++= testLibraryDependencies
-  )
 
 lazy val aocJS = aoc
   .js
   .enablePlugins(ScalaJSPlugin)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalatest" %%% "scalatest" % "3.0.5" % Test
+    )
+  )
 
 lazy val aocJVM = aoc
   .jvm
   .settings(
-    Compile / unmanagedResourceDirectories += (root / baseDirectory).value / "aoc" / "resources"
+    Compile / unmanagedResourceDirectories += (root / baseDirectory).value / "aoc" / "resources",
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.0.5" % Test
+    )
   )
 
 excludeFilter in unmanagedSources := HiddenFileFilter || ".#*" || "*~"
