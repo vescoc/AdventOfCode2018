@@ -35,7 +35,7 @@ object Day13 {
   import Direction._
   import Track._
 
-  case class Cart(location: Point, direction: Direction, turn: Turn = Turn.Left) {
+  case class Cart(id: Int, location: Point, direction: Direction, turn: Turn = Turn.Left) {
     def move(c: Track): Cart = {
       val t =
         (c, turn) match {
@@ -85,7 +85,7 @@ object Day13 {
         }
 
         if (dx == 0 && dy == 0)
-          sys.error(s"invalid command: $c direction: $direction turn: $turn")
+          sys.error(s"invalid command: '$c' direction: $direction turn: $turn")
 
         location.copy(location.x + dx, location.y + dy)
       }
@@ -111,32 +111,37 @@ object Day13 {
   }
 
   case class Problem(lines: Iterator[String]) {
-    lazy val (tracks, carts) = lines.zipWithIndex
-      .map { p =>
-        val (l, y) = p
+    lazy val (tracks, carts) = {
+      val id = Iterator.from(0)
 
-        l.toUpperCase.zipWithIndex
-          .map { p =>
-            val (c, x) = p
+      lines.zipWithIndex
+        .map { p =>
+          val (l, y) = p
 
-            c match {
-              case Direction.Up | Direction.Down =>
-                (Track.Vertical, Some(Cart(Point(x, y), c)))
-              case Direction.Left | Direction.Right =>
-                (Track.Horizontal, Some(Cart(Point(x, y), c)))
-              case _ =>
-                (c, None)
+          l.toUpperCase.zipWithIndex
+            .map { p =>
+              val (c, x) = p
+
+              c match {
+                case Direction.Up | Direction.Down =>
+                  (Track.Vertical, Some(Cart(id.next, Point(x, y), c)))
+                case Direction.Left | Direction.Right =>
+                  (Track.Horizontal, Some(Cart(id.next, Point(x, y), c)))
+                case _ =>
+                  (c, None)
+              }
             }
-          }
-          .foldLeft(("", List.empty[Cart])) { (acc, value) =>
-            (acc._1 + value._1, acc._2 ++ value._2.toList)
-          }
-      }
-      .foldLeft((List.empty[String], List.empty[Cart])) { (acc, value) =>
-        (acc._1 ++ List(value._1), acc._2 ++ value._2)
-      }
+            .foldLeft(("", List.empty[Cart])) { (acc, value) =>
+              (acc._1 + value._1, acc._2 ++ value._2.toList)
+            }
+        }
+        .foldLeft((List.empty[String], List.empty[Cart])) { (acc, value) =>
+          (acc._1 ++ List(value._1), acc._2 ++ value._2)
+        }
+    }
 
     lazy val TrackHeight = tracks.size
+    lazy val TrackWidth = tracks(0).size
 
     def tick(carts: List[Cart]): (List[Cart], List[Point]) = {
       @tailrec

@@ -65,12 +65,12 @@ lazy val aoc = crossProject(JSPlatform, JVMPlatform)
         if (!sourceFile.exists() || sourceFile.lastModified() < resourceFile.lastModified()) {
           val content = IO.read(resourceFile)
 
-          val scalaCode = s"""|package aoc
-                              |
-                              |object $name {
-                              |  final val content = raw\"\"\"$content\"\"\"
-                              |}
-                              |""".stripMargin
+          val scalaCode = s"""package aoc
+
+object $name {
+ final val content = raw\"\"\"$content\"\"\"
+}
+"""
 
           IO.write(sourceFile, scalaCode)
         }
@@ -101,4 +101,3 @@ lazy val aocJVM = aoc
   )
 
 excludeFilter in unmanagedSources := HiddenFileFilter || ".#*" || "*~"
-
