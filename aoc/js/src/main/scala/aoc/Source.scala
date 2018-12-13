@@ -14,6 +14,7 @@ object Source extends SourceContract {
       case "input-09.data" => Input09.content
       case "input-10.data" => Input10.content
       case "input-12.data" => Input12.content
+      case "input-13.data" => Input13.content
     }
 
     def getLines() = content.lines
