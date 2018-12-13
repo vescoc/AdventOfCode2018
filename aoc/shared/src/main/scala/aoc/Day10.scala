@@ -22,5 +22,6 @@ object Day10 {
         case re(x, y, vx, vy) =>
           Star(Point(x.toInt, y.toInt), Velocity(vx.toInt, vy.toInt))
       }
-    }.toList
+    }
+    .toList
 }

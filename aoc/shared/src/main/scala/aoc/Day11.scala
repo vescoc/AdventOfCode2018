@@ -8,7 +8,7 @@ object Day11 {
   val GridWidth = 300
 
   def main(args: Array[String]): Unit = {
-    val MaxSquareSize = Try {args(0).toInt } getOrElse GridWidth
+    val MaxSquareSize = Try { args(0).toInt } getOrElse GridWidth
     val OptMode = Try { args(1).toInt } getOrElse 0
     val GridSerialNumber = Try { args(2).toInt } getOrElse 5153
 
@@ -51,7 +51,9 @@ object Day11 {
             if (x + dim >= GridWidth || y + dim >= GridHeight)
               calc(current, x, y, dimensions)
             else {
-              val candidate = value(x + dim - 1)(y + dim - 1) + value(x - 1)(y - 1) - value(x + dim - 1)(y - 1) - value(x - 1)(y + dim - 1)
+              val candidate = value(x + dim - 1)(y + dim - 1) + value(x - 1)(y - 1) - value(x + dim - 1)(y - 1) - value(
+                x - 1
+              )(y + dim - 1)
               if (candidate > current._2)
                 calc(((x + 1, y + 1, dim), candidate), x, y, dimensions)
               else
@@ -63,7 +65,7 @@ object Day11 {
                 val r = (0, y + 1)
                 r
               } else
-                  (x + 1, y)
+                (x + 1, y)
             }
             calc(current, nx, ny, range.iterator)
           }
@@ -77,47 +79,43 @@ object Day11 {
     val powerGridSolvers = {
       val powerGrid = Array.tabulate(GridWidth, GridHeight) { powerGridXY }
 
-      def solveBrutal(range: Range): Info = {
+      def solveBrutal(range: Range): Info =
         (
-          (
-            for {
-              d <- range
-            } yield {
-              val inner: Seq[Info] = (
-                for {
-                  x <- 0 until GridWidth
-                  y <- 0 until GridHeight
-                } yield {
-                  val cell: ((Int, Int, Int), Option[Int]) =
-                    (
-                      (x + 1, y + 1, d) ->
-                        (
-                          (
-                            for {
-                              dx <- x until x + d
-                              dy <- y until y + d
-                            } yield {
-                              Try { Some(powerGrid(dx)(dy)) } getOrElse None
-                            }
-                          ).reduce { (oa: Option[Int], ob: Option[Int]) =>
-                            for {
-                              a <- oa
-                              b <- ob
-                            } yield (a + b)
-                          }
-                        )
-                    )
-                  cell
-                }
-              ).collect { case (k @ _, Some(v @ _)) => (k, v) }
+          (for {
+             d <- range
+           } yield {
+             val inner: Seq[Info] = (
+               for {
+                 x <- 0 until GridWidth
+                 y <- 0 until GridHeight
+               } yield {
+                 val cell: ((Int, Int, Int), Option[Int]) =
+                   (
+                     (x + 1, y + 1, d) ->
+                       (
+                         (
+                           for {
+                             dx <- x until x + d
+                             dy <- y until y + d
+                           } yield {
+                             Try { Some(powerGrid(dx)(dy)) } getOrElse None
+                           }
+                         ).reduce { (oa: Option[Int], ob: Option[Int]) =>
+                           for {
+                             a <- oa
+                             b <- ob
+                           } yield (a + b)
+                         }
+                       )
+                 )
+                 cell
+               }
+             ).collect { case (k @ _, Some(v @ _)) => (k, v) }
 
-              inner
-            }
-          )
-        )
-          .flatten
+             inner
+           })
+        ).flatten
           .maxBy { _._2 }
-      }
 
       def solveOpt(range: Range): Info = {
         @tailrec
@@ -156,7 +154,7 @@ object Day11 {
                 val r = (0, y + 1)
                 r
               } else
-                  (x + 1, y)
+                (x + 1, y)
             }
             calc(current, nx, ny, range.iterator)
           }
@@ -165,9 +163,7 @@ object Day11 {
       }
 
       def solveOpt2(range: Range): Info = {
-        val max = powerGrid
-          .map { _.max }
-          .max
+        val max = powerGrid.map { _.max }.max
 
         val iterator = range.iterator
 
@@ -225,7 +221,7 @@ object Day11 {
     }
 
     val solvers = sumUpLeftSolvers ++ powerGridSolvers
-    
+
     val solve = solvers(OptMode)
 
     val solution1 = solve(3 to 3)

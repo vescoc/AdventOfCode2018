@@ -46,9 +46,9 @@ object Day12 {
 
     case class Generation(pots: String = initialState, zero: Long = 0, compact: Boolean = true) {
       def evolve(): Generation = {
-        val tmp = s"...${pots}..."
+        val tmp = s"...$pots..."
           .sliding(5, 1)
-          .map { patterns getOrElse(_, ".") }
+          .map { patterns getOrElse (_, ".") }
           .mkString("")
 
         if (compact) {
@@ -66,13 +66,15 @@ object Day12 {
         }
       }
 
-      def evolve(count: Long): Generation = Stream
-        .range(1, count + 1)
-        .foldLeft(this) { (acc, _) => acc.evolve() }
+      def evolve(count: Long): Generation =
+        Stream
+          .range(1, count + 1)
+          .foldLeft(this) { (acc, _) =>
+            acc.evolve()
+          }
 
       def value() =
-        pots
-          .zipWithIndex
+        pots.zipWithIndex
           .filter { _._1 == '#' }
           .map { _._2 - zero }
           .sum
@@ -87,14 +89,17 @@ object Day12 {
     {
       val generation = {
         @tailrec
-        def findCycle(generation: Generation = Generation(), count: Long = 0, story: Map[String, (Long, Long)] = Map.empty): (Long, Long, Long) = {
+        def findCycle(
+          generation: Generation = Generation(),
+          count: Long = 0,
+          story: Map[String, (Long, Long)] = Map.empty
+        ): (Long, Long, Long) =
           story.get(generation.pots) match {
             case Some((v, zero)) =>
               (count, count - v, generation.zero - zero)
             case _ =>
               findCycle(generation.evolve(), count + 1, story + (generation.pots -> ((count, generation.zero))))
           }
-        }
 
         val (delta, cycle, deltaZero) = findCycle()
 
