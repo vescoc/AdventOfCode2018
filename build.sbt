@@ -67,7 +67,7 @@ lazy val aoc = crossProject(JSPlatform, JVMPlatform)
 
           val scalaCode = s"""package aoc
 
-object $name {
+object $name extends Source.ContentProvider {
  final val content = raw\"\"\"$content\"\"\"
 }
 """
