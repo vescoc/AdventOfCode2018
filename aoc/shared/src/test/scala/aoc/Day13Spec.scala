@@ -7,7 +7,7 @@ import Day13._
 class Day13Spec extends WordSpec with MustMatchers {
   "A cart" must {
     "go down on vertical from direction down" in {
-      val cart = Cart(Point(1, 1), Direction.Down)
+      val cart = Cart(0, Point(1, 1), Direction.Down)
 
       val newCart = cart.move(Track.Vertical)
 
@@ -17,7 +17,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go up on vertical from direction up" in {
-      val cart = Cart(Point(1, 1), Direction.Up)
+      val cart = Cart(0, Point(1, 1), Direction.Up)
 
       val newCart = cart.move(Track.Vertical)
 
@@ -27,7 +27,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go left on horizontal from direction left" in {
-      val cart = Cart(Point(1, 1), Direction.Left)
+      val cart = Cart(0, Point(1, 1), Direction.Left)
 
       val newCart = cart.move(Track.Horizontal)
 
@@ -37,7 +37,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go right on horizontal from direction right" in {
-      val cart = Cart(Point(1, 1), Direction.Right)
+      val cart = Cart(0, Point(1, 1), Direction.Right)
 
       val newCart = cart.move(Track.Horizontal)
 
@@ -47,7 +47,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go down on turn left from direction right" in {
-      val cart = Cart(Point(1, 1), Direction.Right)
+      val cart = Cart(0, Point(1, 1), Direction.Right)
 
       val newCart = cart.move(Track.TurnLeft)
 
@@ -57,7 +57,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go up on turn left from direction left" in {
-      val cart = Cart(Point(1, 1), Direction.Left)
+      val cart = Cart(0, Point(1, 1), Direction.Left)
 
       val newCart = cart.move(Track.TurnLeft)
 
@@ -67,7 +67,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go up on turn right from direction right" in {
-      val cart = Cart(Point(1, 1), Direction.Right)
+      val cart = Cart(0, Point(1, 1), Direction.Right)
 
       val newCart = cart.move(Track.TurnRight)
 
@@ -77,7 +77,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go down on turn right from direction left" in {
-      val cart = Cart(Point(1, 1), Direction.Left)
+      val cart = Cart(0, Point(1, 1), Direction.Left)
 
       val newCart = cart.move(Track.TurnRight)
 
@@ -87,7 +87,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go up on intersection from direction right next turn left" in {
-      val cart = Cart(Point(1, 1), Direction.Right, Turn.Left)
+      val cart = Cart(0, Point(1, 1), Direction.Right, Turn.Left)
 
       val newCart = cart.move(Track.Intersection)
 
@@ -97,7 +97,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go up on intersection from direction left next turn right" in {
-      val cart = Cart(Point(1, 1), Direction.Left, Turn.Right)
+      val cart = Cart(0, Point(1, 1), Direction.Left, Turn.Right)
 
       val newCart = cart.move(Track.Intersection)
 
@@ -107,7 +107,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go down on intersection from direction right next turn right" in {
-      val cart = Cart(Point(1, 1), Direction.Right, Turn.Right)
+      val cart = Cart(0, Point(1, 1), Direction.Right, Turn.Right)
 
       val newCart = cart.move(Track.Intersection)
 
@@ -117,7 +117,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go down on intersection from direction left next turn left" in {
-      val cart = Cart(Point(1, 1), Direction.Left, Turn.Left)
+      val cart = Cart(0, Point(1, 1), Direction.Left, Turn.Left)
 
       val newCart = cart.move(Track.Intersection)
 
@@ -127,7 +127,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go right on intersection from direction up next turn right" in {
-      val cart = Cart(Point(1, 1), Direction.Up, Turn.Right)
+      val cart = Cart(0, Point(1, 1), Direction.Up, Turn.Right)
 
       val newCart = cart.move(Track.Intersection)
 
@@ -137,7 +137,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go right on intersection from direction down next turn left" in {
-      val cart = Cart(Point(1, 1), Direction.Down, Turn.Left)
+      val cart = Cart(0, Point(1, 1), Direction.Down, Turn.Left)
 
       val newCart = cart.move(Track.Intersection)
 
@@ -147,7 +147,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go left on intersection from direction up next turn left" in {
-      val cart = Cart(Point(1, 1), Direction.Up, Turn.Left)
+      val cart = Cart(0, Point(1, 1), Direction.Up, Turn.Left)
 
       val newCart = cart.move(Track.Intersection)
 
@@ -157,7 +157,7 @@ class Day13Spec extends WordSpec with MustMatchers {
     }
 
     "go left on intersection from direction down next turn right" in {
-      val cart = Cart(Point(1, 1), Direction.Down, Turn.Right)
+      val cart = Cart(0, Point(1, 1), Direction.Down, Turn.Right)
 
       val newCart = cart.move(Track.Intersection)
 
