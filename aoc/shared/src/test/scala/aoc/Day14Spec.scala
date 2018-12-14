@@ -5,12 +5,12 @@ import org.scalatest.{MustMatchers, WordSpec}
 import aoc.Day14._
 
 class Day14Spec extends WordSpec with MustMatchers {
-  val recipes = recipesMaker(37)
+  val (takeAfter, findFirstRecurrence) = recipesMaker()
 
   "part 1 recipes" must {
     def testTakeAfter(input: String, after: Int) =
       s"equals $input after $after" in {
-        takeAfter(recipes, 10, after) mustBe (input)
+        takeAfter(10, after) mustBe (input)
       }
 
     testTakeAfter("5158916779", 9)
@@ -22,7 +22,7 @@ class Day14Spec extends WordSpec with MustMatchers {
   "part 2" must {
     def testFindFirstRecurrence(input: String, index: Int) =
       s"$input appears after $index recipes" in {
-        findFirstRecurrence(recipes, input) mustBe (index)
+        findFirstRecurrence(input) mustBe (index)
       }
 
     testFindFirstRecurrence("51589", 9)
