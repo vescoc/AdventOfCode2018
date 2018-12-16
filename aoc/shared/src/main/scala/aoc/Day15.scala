@@ -1,7 +1,6 @@
 package aoc
 
 import scala.annotation.tailrec
-import scala.util.Try
 
 object Day15 {
   val Cardinals = List(
@@ -24,7 +23,7 @@ object Day15 {
     def +(that: Point) = Point(x + that.x, y + that.y)
   }
 
-  type Action = PartialFunction[(State, List[Minion]), (State, List[Minion])]
+  type Action = PartialFunction[(State, List[Minion]), (Minion, State, List[Minion])]
 
   type Path = List[Point]
 
@@ -61,13 +60,17 @@ object Day15 {
         val (state, remainder) = v
 
         val enemy = neighborEnemies
+          .groupBy { _.hitpoints }
+          .minBy { _._1 }
+          ._2
           .minBy { minion => state.dungeon.calcMinBy(minion.position) }
           .fightWith(current)
 
         if (enemy.isKilled)
-          (state.killed(enemy), remainder.filterNot { minion => minion.id == enemy.id })
+          (current, state.killed(enemy), remainder.filterNot { minion => minion.id == enemy.id })
         else
           (
+            current,
             state.adjourn(enemy),
             remainder.map { minion =>
               if (minion.id == enemy.id)
@@ -91,76 +94,98 @@ object Day15 {
           }
           .flatten
 
-        if (enemies.isEmpty)
+        lazy val enemyNear = (
+          for {
+            c <- Cardinals
+            np = current.position + c
+          } yield {
+            state(np) match {
+              case m @ Minion(minionType, _, _, _, _) if (current.minionType != minionType) =>
+                Some(m)
+              case _ =>
+                None
+            }
+          }
+        )
+          .flatten
+          .isEmpty == false
+
+        if (enemies.isEmpty || enemyNear)
           Map.empty
         else {
           @tailrec
-          def findPaths(paths: Set[Path], candidates: Set[Path], set: Set[Point]): Set[Path] = {
-            if (candidates.isEmpty)
-              paths
-                .map { path => path.reverse }
-            else {
-              val set = paths.flatten ++ candidates.flatten
-
-              val (newPaths, newCandidates, newSet) = candidates
-                .foldLeft((paths, Set.empty[Path], set)) { (acc, path) =>
-                  val (paths, candidates, set) = acc
-
-                  val point = path.head
-
-                  val (newPaths, newCandidates, newSet) = (
-                    for {
-                      c <- Cardinals
-                      np = point + c
-                      if set.contains(np) == false
-                    } yield {
-                      val npath = np :: path
-                      if (candidates.contains(npath) || paths.contains(npath))
-                        (None, None, None)
-                      else
-                        state(np) match {
-                          case _: OpenCavern =>
-                            (None, Some(npath), Some(np))
-                          case _: Minion =>
-                            (Some(npath), None, None)
-                          case _ =>
-                            (None, None, Some(np))
-                        }
-                    }
+          def findPaths(map: Map[Point, Path], remainder: Set[Point]): Map[Point, Path] = {
+            remainder.toList match {
+              case head :: tail =>
+                if (map.contains(head)) {
+                  findPaths(
+                    map,
+                    tail.toSet ++ (
+                      for {
+                        c <- Cardinals
+                        np = head + c
+                        if map.contains(np) == false && state(np).isInstanceOf[OpenCavern]
+                      } yield { np }
+                    )
                   )
-                    .foldLeft((paths, candidates, set)) { (acc, value) =>
-                      (acc._1 ++ value._1, acc._2 ++ value._2, acc._3 ++ value._3)
-                    }
+                } else {
+                  val paths = for {
+                    c <- Cardinals
+                    np = head + c
+                    if map.contains(np)
+                  } yield { head :: map(np) }
 
-                  val r = (newPaths, newCandidates, newSet)
+                  if (paths.isEmpty) {
+                    findPaths(map, tail.toSet)
+                  } else {
+                    val betterPath = paths
+                      .groupBy { _.size }
+                      .minBy { _._1 }
+                      ._2
+                      .minBy { path =>
+                        if (path.size > 1)
+                          state.dungeon.calcMinBy(path(path.size - 2))
+                        else
+                          0
+                      }
 
-                  r
+                    findPaths(
+                      map + (head -> betterPath),
+                      tail.toSet + head
+                    )
+                  }
                 }
-
-              findPaths(newPaths, newCandidates, newSet)
+              case _ =>
+                map
+                  .map { p =>
+                    p._1 -> p._2.reverse
+                  }
             }
           }
 
-          val paths = findPaths(Set.empty, Set(List(current.position)), Set(current.position))
+          val paths = findPaths(Map(current.position -> List(current.position)), Set(current.position))
 
           enemies
             .flatMap { enemy =>
-              Try {
+              val ps = for {
+                c <- Cardinals
+                np = enemy.position + c
+                if paths.contains(np)
+              } yield { paths(np) }
+
+              if (ps.isEmpty)
+                None
+              else {
                 Some(
-                  enemy -> paths
-                    .filter { path =>
-                      path.last == enemy.position
-                    }
-                    .groupBy { _.size }
-                    .minBy { p =>
-                      p._1
-                    }
-                    ._2
-                    .minBy { path =>
-                      state.dungeon.calcMinBy(path(1))
-                    }
+                  enemy ->
+                    (ps
+                      .groupBy { _.size }
+                      .minBy { _._1 }
+                      ._2
+                      .minBy { path => state.dungeon.calcMinBy(path(1)) }
+                    )
                 )
-              } getOrElse None
+              }
             }
             .toMap
         }          
@@ -178,6 +203,7 @@ object Day15 {
         val movedMinion = copy(position = path(1))
 
         (
+          movedMinion,
           state.adjourn(movedMinion),
           remainder
             .map { minion =>
@@ -192,7 +218,7 @@ object Day15 {
       def isDefinedAt(v: (State, List[Minion])) = pathToEnemies.isEmpty == false
     }
 
-    def rest(state: State): Action = { case v => v }
+    def rest(state: State): Action = { case v => (this, v._1, v._2) }
   }
 
   case class Dungeon(data: Array[String]) {
@@ -208,14 +234,34 @@ object Day15 {
 
   case class State(dungeon: Dungeon, minions: List[Minion], minionsDead: List[Minion]) {
     def round(): State = {
-      def turn(state: State, minion: Minion, remainder: List[Minion]): (State, List[Minion]) =
-        (minion.attack(state) orElse minion.move(state) orElse minion.rest(state))((state, remainder))
+      def turn(minion: Minion, state: State, remainder: List[Minion]): (State, List[Minion]) = {
+        val move = minion.move(state)
+        if (move.isDefinedAt((state, remainder))) {
+          val (newMinion, newState, newRemainder) = move.apply((state, remainder))
+
+          val attack = newMinion.attack(newState)
+          if (attack.isDefinedAt((newState, newRemainder))) {
+            val r = attack.apply((newState, newRemainder))
+            (r._2, r._3)
+          } else {
+            (newState, newRemainder)
+          }
+        } else {
+          val attack = minion.attack(state)
+          if (attack.isDefinedAt((state, remainder))) {
+            val r = attack.apply((state, remainder))
+            (r._2, r._3)
+          } else {
+            (state, remainder)
+          }
+        }
+      }
 
       @tailrec
       def round(state: State, minions: List[Minion]): State =
         minions match {
           case minion :: remainder =>
-            val (newState, newRemainder) = turn(state, minion, remainder)
+            val (newState, newRemainder) = turn(minion, state, remainder)
             round(newState, newRemainder)
           case _ =>
             state
@@ -298,7 +344,7 @@ object Day15 {
     @tailrec
     def round(count: Int = 0, state: State = state): (Int, State) =
       if (state.minions.groupBy { _.minionType }.size == 1)
-        (count * (state.minions.map { _.hitpoints }.sum), state)
+        ((count - 1) * (state.minions.map { _.hitpoints }.sum), state)
       else
         round(count + 1, state.round())
 
@@ -306,6 +352,10 @@ object Day15 {
   }
 
   def main(args: Array[String]): Unit = {
-    //val state = Dungeon.parse(Source.fromResource("input-15.data").getLines())
+    val lines = Source
+      .fromResource("input-15.data")
+      .getLines()
+
+    println(s"solution 1: ${solution1(lines)}")
   }
 }
