@@ -23,7 +23,7 @@ object Day15 {
     def +(that: Point) = Point(x + that.x, y + that.y)
   }
 
-  type Action = PartialFunction[(State, List[Minion]), (Minion, State, List[Minion])]
+  type Action = PartialFunction[List[Minion], (Minion, State, List[Minion])]
 
   type Path = List[Point]
 
@@ -34,19 +34,21 @@ object Day15 {
   case class Wall(position: Point) extends DungeonElement
   case class OpenCavern(position: Point) extends DungeonElement
 
-  case class Minion(minionType: MinionType, id: Int, position: Point, force: Int = 3, hitpoints: Int = 200)
-      extends DungeonElement { current =>
+  case class Minion(minionType: MinionType, id: Int, position: Point, hitpoints: Int = 200, force: Int = 3)
+      extends DungeonElement {
     def isKilled = hitpoints <= 0
 
     def fightWith(that: Minion) = copy(hitpoints = hitpoints - that.force)
 
     def attack(state: State): Action = new Action {
+      val current = state.getById(id)
+
       lazy val neighborEnemies: List[Minion] =
         (
           for {
             c <- Cardinals
           } yield {
-            state(position + c) match {
+            state(current.position + c) match {
               case m @ Minion(minionType, _, p, _, _) if current.minionType != minionType =>
                 Some(m)
               case _ =>
@@ -55,11 +57,9 @@ object Day15 {
           }
         ).flatten
 
-      def isDefinedAt(v: (State, List[Minion])) = neighborEnemies.isEmpty == false
+      def isDefinedAt(v: List[Minion]) = neighborEnemies.isEmpty == false
 
-      def apply(v: (State, List[Minion])) = {
-        val (state, remainder) = v
-
+      def apply(remainder: List[Minion]) = {
         val enemy = neighborEnemies
           .groupBy { _.hitpoints }
           .minBy { _._1 }
@@ -88,6 +88,8 @@ object Day15 {
     }
 
     def move(state: State): Action = new Action {
+      val current = state.getById(id)
+
       lazy val pathToEnemies: Map[Minion, Path] = {
         val enemies = state.minions.map { minion =>
           if (minion.minionType != current.minionType)
@@ -189,9 +191,7 @@ object Day15 {
         }
       }
 
-      def apply(v: (State, List[Minion])) = {
-        val (state, remainder) = v
-
+      def apply(remainder: List[Minion]) = {
         val (minion, path) = pathToEnemies
           .groupBy { _._2.size }
           .minBy { _._1 }
@@ -215,10 +215,10 @@ object Day15 {
         )
       }
 
-      def isDefinedAt(v: (State, List[Minion])) = pathToEnemies.isEmpty == false
+      def isDefinedAt(remainder: List[Minion]) = pathToEnemies.isEmpty == false
     }
 
-    def rest(state: State): Action = { case v => (this, v._1, v._2) }
+    def rest(state: State): Action = { case v => (this, state, v) }
   }
 
   case class Dungeon(data: Array[String]) {
@@ -233,23 +233,35 @@ object Day15 {
   }
 
   case class State(dungeon: Dungeon, minions: List[Minion], minionsDead: List[Minion]) {
+    def score =
+      minions
+        .groupBy { _.minionType }
+        .map { p => p._1 -> p._2.map { _.hitpoints }.sum }
+
+
+    def getById(id: Int) =
+      (
+        minions.filter { _.id == id } ++ minionsDead.filter { _.id == id }
+      )
+        .head
+
     def round(): State = {
       def turn(minion: Minion, state: State, remainder: List[Minion]): (State, List[Minion]) = {
         val move = minion.move(state)
-        if (move.isDefinedAt((state, remainder))) {
-          val (newMinion, newState, newRemainder) = move.apply((state, remainder))
+        if (move.isDefinedAt(remainder)) {
+          val (newMinion, newState, newRemainder) = move.apply(remainder)
 
           val attack = newMinion.attack(newState)
-          if (attack.isDefinedAt((newState, newRemainder))) {
-            val r = attack.apply((newState, newRemainder))
+          if (attack.isDefinedAt(newRemainder)) {
+            val r = attack.apply(newRemainder)
             (r._2, r._3)
           } else {
             (newState, newRemainder)
           }
         } else {
           val attack = minion.attack(state)
-          if (attack.isDefinedAt((state, remainder))) {
-            val r = attack.apply((state, remainder))
+          if (attack.isDefinedAt(remainder)) {
+            val r = attack.apply(remainder)
             (r._2, r._3)
           } else {
             (state, remainder)
@@ -301,6 +313,40 @@ object Day15 {
               OpenCavern(position)
           }
       }
+
+    override def toString =
+      dungeon
+        .data
+        .zipWithIndex
+        .map { p =>
+          val (l, y) = p
+
+          val row = l
+            .zipWithIndex
+            .map { p =>
+              val (c, x) = p
+
+              apply(Point(x, y)) match {
+                case m: Minion =>
+                  (m.minionType, Some(m))
+                case _ =>
+                  (c, None)
+              }
+            }
+            .foldLeft(("", List.empty[Minion])) { (acc, info) =>
+              (acc._1 + info._1, acc._2 ++ info._2)
+            }
+
+          val minions = row
+            ._2
+            .map { m =>
+              s"""${m.minionType}${m.id}(${m.position.x},${m.position.y})[${m.hitpoints}]"""
+            }
+            .mkString(" ")
+
+          s"""${row._1} ${minions}"""
+        }
+        .mkString("\n")
   }
 
   object Dungeon {
