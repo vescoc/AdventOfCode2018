@@ -20,6 +20,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-value-discard",
     "-Xfuture"
   ),
+  Test / parallelExecution := false,
   excludeFilter in unmanagedSources := HiddenFileFilter || ".#*" || "*~"
 )
 
