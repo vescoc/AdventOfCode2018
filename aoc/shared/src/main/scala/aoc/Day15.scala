@@ -34,7 +34,8 @@ object Day15 {
   case class Wall(position: Point) extends DungeonElement
   case class OpenCavern(position: Point) extends DungeonElement
 
-  case class Minion(minionType: MinionType, id: Int, position: Point, force: Int = 3, hitpoints: Int = 200) extends DungeonElement { current =>
+  case class Minion(minionType: MinionType, id: Int, position: Point, force: Int = 3, hitpoints: Int = 200)
+      extends DungeonElement { current =>
     def isKilled = hitpoints <= 0
 
     def fightWith(that: Minion) = copy(hitpoints = hitpoints - that.force)
@@ -63,11 +64,15 @@ object Day15 {
           .groupBy { _.hitpoints }
           .minBy { _._1 }
           ._2
-          .minBy { minion => state.dungeon.calcMinBy(minion.position) }
+          .minBy { minion =>
+            state.dungeon.calcMinBy(minion.position)
+          }
           .fightWith(current)
 
         if (enemy.isKilled)
-          (current, state.killed(enemy), remainder.filterNot { minion => minion.id == enemy.id })
+          (current, state.killed(enemy), remainder.filterNot { minion =>
+            minion.id == enemy.id
+          })
         else
           (
             current,
@@ -84,15 +89,12 @@ object Day15 {
 
     def move(state: State): Action = new Action {
       lazy val pathToEnemies: Map[Minion, Path] = {
-        val enemies = state
-          .minions
-          .map { minion =>
-            if (minion.minionType != current.minionType)
-              Some(minion)
-            else
-              None
-          }
-          .flatten
+        val enemies = state.minions.map { minion =>
+          if (minion.minionType != current.minionType)
+            Some(minion)
+          else
+            None
+        }.flatten
 
         lazy val enemyNear = (
           for {
@@ -106,15 +108,13 @@ object Day15 {
                 None
             }
           }
-        )
-          .flatten
-          .isEmpty == false
+        ).flatten.isEmpty == false
 
         if (enemies.isEmpty || enemyNear)
           Map.empty
         else {
           @tailrec
-          def findPaths(map: Map[Point, Path], remainder: Set[Point]): Map[Point, Path] = {
+          def findPaths(map: Map[Point, Path], remainder: Set[Point]): Map[Point, Path] =
             remainder.toList match {
               case head :: tail =>
                 if (map.contains(head)) {
@@ -161,34 +161,32 @@ object Day15 {
                     p._1 -> p._2.reverse
                   }
             }
-          }
 
           val paths = findPaths(Map(current.position -> List(current.position)), Set(current.position))
 
-          enemies
-            .flatMap { enemy =>
-              val ps = for {
-                c <- Cardinals
-                np = enemy.position + c
-                if paths.contains(np)
-              } yield { paths(np) }
+          enemies.flatMap { enemy =>
+            val ps = for {
+              c <- Cardinals
+              np = enemy.position + c
+              if paths.contains(np)
+            } yield { paths(np) }
 
-              if (ps.isEmpty)
-                None
-              else {
-                Some(
-                  enemy ->
-                    (ps
-                      .groupBy { _.size }
-                      .minBy { _._1 }
-                      ._2
-                      .minBy { path => state.dungeon.calcMinBy(path(1)) }
-                    )
-                )
-              }
+            if (ps.isEmpty)
+              None
+            else {
+              Some(
+                enemy ->
+                  (ps
+                    .groupBy { _.size }
+                    .minBy { _._1 }
+                    ._2
+                    .minBy { path =>
+                      state.dungeon.calcMinBy(path(1))
+                    })
+              )
             }
-            .toMap
-        }          
+          }.toMap
+        }
       }
 
       def apply(v: (State, List[Minion])) = {
@@ -198,7 +196,9 @@ object Day15 {
           .groupBy { _._2.size }
           .minBy { _._1 }
           ._2
-          .minBy { p => state.dungeon.calcMinBy(p._2(1)) }
+          .minBy { p =>
+            state.dungeon.calcMinBy(p._2(1))
+          }
 
         val movedMinion = copy(position = path(1))
 
@@ -267,11 +267,15 @@ object Day15 {
             state
         }
 
-      round(this, minions.sortBy { minion => dungeon.calcMinBy(minion.position) })
+      round(this, minions.sortBy { minion =>
+        dungeon.calcMinBy(minion.position)
+      })
     }
 
     def killed(that: Minion): State = copy(
-      minions = minions.filterNot { minion => minion.id == that.id },
+      minions = minions.filterNot { minion =>
+        minion.id == that.id
+      },
       minionsDead = that :: minionsDead
     )
 
@@ -303,13 +307,11 @@ object Day15 {
     def parse(lines: Iterator[String]): State = {
       val ids = Iterator.from(0)
 
-      val (mapLines, minions) = lines
-        .zipWithIndex
+      val (mapLines, minions) = lines.zipWithIndex
         .map { p =>
           val (l, y) = p
 
-          l
-            .zipWithIndex
+          l.zipWithIndex
             .map { p =>
               val (c, x) = p
 

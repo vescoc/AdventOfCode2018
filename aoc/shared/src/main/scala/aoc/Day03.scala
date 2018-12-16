@@ -28,7 +28,7 @@ object Day03 {
 
   type Info = Map[(Int, Int), Set[Int]]
 
-  def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit =
     if (Pure) {
       val (solution1, map) = input
         .foldLeft((0, Map.empty[(Int, Int), Set[Int]])) { (acc, r) =>
@@ -124,5 +124,4 @@ object Day03 {
 
       println(s"solution 2: $solution2")
     }
-  }
 }

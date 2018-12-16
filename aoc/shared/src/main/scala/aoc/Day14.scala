@@ -68,8 +68,7 @@ object Day14 {
       }
 
       def takeAfter(take: Int, after: Int): String = {
-        while (size < after + take)
-          calc()
+        while (size < after + take) calc()
 
         recipes.drop(after).take(take).map { _.toString }.mkString
       }
@@ -86,7 +85,9 @@ object Day14 {
           if (index + bytesSize > size) {
             calc()
             find(index)
-          } else if ((0 until bytesSize).forall { i => bytes(i) == recipes(index + i) })
+          } else if ((0 until bytesSize).forall { i =>
+                       bytes(i) == recipes(index + i)
+                     })
             index
           else {
             find(index + 1)
