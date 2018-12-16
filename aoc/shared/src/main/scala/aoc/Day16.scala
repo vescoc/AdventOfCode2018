@@ -79,8 +79,7 @@ object Day16 {
 
   case class Sample(before: Registries, istruction: Istruction, after: Registries) {
     def test(): Seq[OpCode] =
-      OpCodes
-        .all
+      OpCodes.all
         .filter { opcode =>
           opcode.run(before, istruction) == after
         }
@@ -103,12 +102,16 @@ object Day16 {
                 sample.test().toSet -- mappedOps
               )
             }
-            .filter { p => p._2.size == 1 }
+            .filter { p =>
+              p._2.size == 1
+            }
 
           assert(uniqueSamples.size > 0)
 
           val foundOpCodes = uniqueSamples
-            .groupBy { p => (p._1.istruction.opcode, p._2.iterator.next) }
+            .groupBy { p =>
+              (p._1.istruction.opcode, p._2.iterator.next)
+            }
             .map { _._1 }
             .toMap
 
@@ -124,7 +127,9 @@ object Day16 {
     }
 
     def run(map: Map[Int, OpCode]) =
-      istructions.foldLeft(Registries(0, 0, 0, 0)) { (acc, i) => map(i.opcode).run(acc, i) }
+      istructions.foldLeft(Registries(0, 0, 0, 0)) { (acc, i) =>
+        map(i.opcode).run(acc, i)
+      }
   }
 
   def parse(lines: Iterator[String]): Data = {
@@ -174,8 +179,7 @@ object Day16 {
     val data = parse(Source.fromResource("input-16.data").getLines())
 
     val solution1 =
-      data
-        .samples
+      data.samples
         .map { sample =>
           sample.test().size
         }

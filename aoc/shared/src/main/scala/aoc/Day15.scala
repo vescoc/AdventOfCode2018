@@ -116,55 +116,46 @@ object Day15 {
           Map.empty
         else {
           @tailrec
-          def findPaths(map: Map[Point, Path], remainder: Set[Point]): Map[Point, Path] =
-            remainder.toList match {
-              case head :: tail =>
-                if (map.contains(head)) {
-                  findPaths(
-                    map,
-                    tail.toSet ++ (
-                      for {
-                        c <- Cardinals
-                        np = head + c
-                        if map.contains(np) == false && state(np).isInstanceOf[OpenCavern]
-                      } yield { np }
-                    )
-                  )
-                } else {
-                  val paths = for {
-                    c <- Cardinals
-                    np = head + c
-                    if map.contains(np)
-                  } yield { head :: map(np) }
+          def findPaths(map: Map[Point, Path]): Map[Point, Path] = {
+            val set = map.keySet
 
-                  if (paths.isEmpty) {
-                    findPaths(map, tail.toSet)
-                  } else {
-                    val betterPath = paths
+            val boundPoints = for {
+              p <- set
+              c <- Cardinals
+              np = p + c
+              if !set.contains(np) && state(np).isInstanceOf[OpenCavern]
+            } yield { np }
+
+            if (boundPoints.isEmpty)
+              map
+                .map { p =>
+                  p._1 -> p._2.reverse
+                } else {
+              val paths: Map[Point, Path] = (
+                for {
+                  p <- boundPoints
+                  c <- Cardinals
+                  np = p + c
+                  if map.contains(np)
+                } yield { p :: map(np) }
+              ).groupBy { _.head }
+                .map { p =>
+                  p._1 -> (
+                    p._2
                       .groupBy { _.size }
                       .minBy { _._1 }
                       ._2
                       .minBy { path =>
-                        if (path.size > 1)
-                          state.dungeon.calcMinBy(path(path.size - 2))
-                        else
-                          0
+                        if (path.size > 1) state.dungeon.calcMinBy(path(path.size - 2)) else 0
                       }
-
-                    findPaths(
-                      map + (head -> betterPath),
-                      tail.toSet + head
-                    )
-                  }
+                  )
                 }
-              case _ =>
-                map
-                  .map { p =>
-                    p._1 -> p._2.reverse
-                  }
-            }
 
-          val paths = findPaths(Map(current.position -> List(current.position)), Set(current.position))
+              findPaths(map ++ paths)
+            }
+          }
+
+          val paths = findPaths(Map(current.position -> List(current.position)))
 
           enemies.flatMap { enemy =>
             val ps = for {
@@ -236,14 +227,14 @@ object Day15 {
     def score =
       minions
         .groupBy { _.minionType }
-        .map { p => p._1 -> p._2.map { _.hitpoints }.sum }
-
+        .map { p =>
+          p._1 -> p._2.map { _.hitpoints }.sum
+        }
 
     def getById(id: Int) =
       (
         minions.filter { _.id == id } ++ minionsDead.filter { _.id == id }
-      )
-        .head
+      ).head
 
     def round(): State = {
       def turn(minion: Minion, state: State, remainder: List[Minion]): (State, List[Minion]) = {
@@ -315,14 +306,11 @@ object Day15 {
       }
 
     override def toString =
-      dungeon
-        .data
-        .zipWithIndex
+      dungeon.data.zipWithIndex
         .map { p =>
           val (l, y) = p
 
-          val row = l
-            .zipWithIndex
+          val row = l.zipWithIndex
             .map { p =>
               val (c, x) = p
 
@@ -337,14 +325,13 @@ object Day15 {
               (acc._1 + info._1, acc._2 ++ info._2)
             }
 
-          val minions = row
-            ._2
+          val minions = row._2
             .map { m =>
               s"""${m.minionType}${m.id}(${m.position.x},${m.position.y})[${m.hitpoints}]"""
             }
             .mkString(" ")
 
-          s"""${row._1} ${minions}"""
+          s"""${row._1} $minions"""
         }
         .mkString("\n")
   }

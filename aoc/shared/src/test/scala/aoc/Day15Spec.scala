@@ -220,7 +220,9 @@ class Day15Spec extends WordSpec with MustMatchers {
       minion(s, 4) mustBe (Minion('G', 4, Point(5, 5)))
       minion(s, 5) mustBe (Minion('E', 5, Point(5, 4), -1))
 
-      println(s"score: ${s.score. map { p => (p._1, (p._2, p._2 * 47)) }}")
+      println(s"score: ${s.score.map { p =>
+        (p._1, (p._2, p._2 * 47))
+      }}")
     }
   }
 
@@ -233,9 +235,7 @@ class Day15Spec extends WordSpec with MustMatchers {
            |#G.##.#
            |#...#E#
            |#...E.#
-           |#######"""
-          .stripMargin
-          .lines
+           |#######""".stripMargin.lines
       )
 
       val s = round(state, 37)
