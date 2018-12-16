@@ -22,7 +22,7 @@ class Day15Spec extends WordSpec with MustMatchers {
           |#.......#
           |#.......#
           |#G..G..G#
-          |#########""".stripMargin.lines
+          |#########""".stripMargin.lines.toList
     )
 
     "equals to example after 1 round" in {
@@ -39,9 +39,6 @@ class Day15Spec extends WordSpec with MustMatchers {
     "equals to example after 2 round" in {
       val s = round(state, 2)
 
-      println("test big after 2")
-      println(s)
-
       minion(s, 0) mustBe (Minion('G', 0, Point(3, 1)))
       minion(s, 1) mustBe (Minion('G', 1, Point(4, 2), 194))
       minion(s, 2) mustBe (Minion('G', 2, Point(5, 1)))
@@ -53,9 +50,6 @@ class Day15Spec extends WordSpec with MustMatchers {
 
     "equals to example after 3 round" in {
       val s = round(state, 3)
-
-      println("test big after 3")
-      println(s)
 
       minion(s, 0) mustBe (Minion('G', 0, Point(3, 2)))
       minion(s, 1) mustBe (Minion('G', 1, Point(4, 2), 191))
@@ -75,7 +69,7 @@ class Day15Spec extends WordSpec with MustMatchers {
               |#.E...#
               |#.....#
               |#...G.#
-              |#######""".stripMargin.lines
+              |#######""".stripMargin.lines.toList
         )
         .round()
 
@@ -92,14 +86,11 @@ class Day15Spec extends WordSpec with MustMatchers {
          |#.#.#G#
          |#..G#E#
          |#.....#
-         |#######""".stripMargin.lines
+         |#######""".stripMargin.lines.toList
     )
 
     "equals to example round 1" in {
       val s = round(state, 1)
-
-      println("fight round 1")
-      println(s)
 
       minion(s, 0) mustBe (Minion('G', 0, Point(3, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), 197))
@@ -112,9 +103,6 @@ class Day15Spec extends WordSpec with MustMatchers {
     "equals to example round 2" in {
       val s = round(state, 2)
 
-      println("fight round 2")
-      println(s)
-
       minion(s, 0) mustBe (Minion('G', 0, Point(4, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), 188))
       minion(s, 2) mustBe (Minion('G', 2, Point(5, 2), 194))
@@ -125,9 +113,6 @@ class Day15Spec extends WordSpec with MustMatchers {
 
     "equals to example round 23" in {
       val s = round(state, 23)
-
-      println("fight round 23")
-      println(s)
 
       minion(s, 0) mustBe (Minion('G', 0, Point(4, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), -1))
@@ -140,9 +125,6 @@ class Day15Spec extends WordSpec with MustMatchers {
     "equals to example round 24" in {
       val s = round(state, 24)
 
-      println("fight round 24")
-      println(s)
-
       minion(s, 0) mustBe (Minion('G', 0, Point(3, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), -1))
       minion(s, 2) mustBe (Minion('G', 2, Point(4, 2), 131))
@@ -153,9 +135,6 @@ class Day15Spec extends WordSpec with MustMatchers {
 
     "equals to example round 25" in {
       val s = round(state, 25)
-
-      println("fight round 25")
-      println(s)
 
       minion(s, 0) mustBe (Minion('G', 0, Point(2, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), -1))
@@ -168,9 +147,6 @@ class Day15Spec extends WordSpec with MustMatchers {
     "equals to example round 26" in {
       val s = round(state, 26)
 
-      println("fight round 26")
-      println(s)
-
       minion(s, 0) mustBe (Minion('G', 0, Point(1, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), -1))
       minion(s, 2) mustBe (Minion('G', 2, Point(2, 2), 131))
@@ -181,9 +157,6 @@ class Day15Spec extends WordSpec with MustMatchers {
 
     "equals to example round 27" in {
       val s = round(state, 27)
-
-      println("fight round 27")
-      println(s)
 
       minion(s, 0) mustBe (Minion('G', 0, Point(1, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), -1))
@@ -196,9 +169,6 @@ class Day15Spec extends WordSpec with MustMatchers {
     "equals to example round 28" in {
       val s = round(state, 28)
 
-      println("fight round 28")
-      println(s)
-
       minion(s, 0) mustBe (Minion('G', 0, Point(1, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), -1))
       minion(s, 2) mustBe (Minion('G', 2, Point(2, 2), 131))
@@ -210,19 +180,12 @@ class Day15Spec extends WordSpec with MustMatchers {
     "equals to example round 47" in {
       val s = round(state, 47)
 
-      println("fight round 47")
-      println(s)
-
       minion(s, 0) mustBe (Minion('G', 0, Point(1, 1)))
       minion(s, 1) mustBe (Minion('E', 1, Point(4, 2), -1))
       minion(s, 2) mustBe (Minion('G', 2, Point(2, 2), 131))
       minion(s, 3) mustBe (Minion('G', 3, Point(5, 3), 59))
       minion(s, 4) mustBe (Minion('G', 4, Point(5, 5)))
       minion(s, 5) mustBe (Minion('E', 5, Point(5, 4), -1))
-
-      println(s"score: ${s.score.map { p =>
-        (p._1, (p._2, p._2 * 47))
-      }}")
     }
   }
 
@@ -235,13 +198,10 @@ class Day15Spec extends WordSpec with MustMatchers {
            |#G.##.#
            |#...#E#
            |#...E.#
-           |#######""".stripMargin.lines
+           |#######""".stripMargin.lines.toList
       )
 
       val s = round(state, 37)
-
-      println("fight 1 round 37")
-      println(s)
 
       minion(s, 0) mustBe (Minion('G', 0, Point(1, 1), -1))
       minion(s, 1) mustBe (Minion('E', 1, Point(5, 1)))
@@ -259,7 +219,7 @@ class Day15Spec extends WordSpec with MustMatchers {
               |#G.##.#
               |#...#E#
               |#...E.#
-              |#######""".stripMargin.lines
+              |#######""".stripMargin.lines.toList
         )
 
       score mustBe (36334)

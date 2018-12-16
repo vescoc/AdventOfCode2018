@@ -337,7 +337,7 @@ object Day15 {
   }
 
   object Dungeon {
-    def parse(lines: Iterator[String]): State = {
+    def parse(lines: List[String], elfForce: Int = 3, goblinForce: Int = 3): State = {
       val ids = Iterator.from(0)
 
       val (mapLines, minions) = lines.zipWithIndex
@@ -351,8 +351,10 @@ object Day15 {
               c match {
                 case '#' | '.' =>
                   (c, None)
-                case 'G' | 'E' =>
-                  ('.', Some(Minion(c, ids.next, Point(x, y))))
+                case 'G' =>
+                  ('.', Some(Minion(c, ids.next, Point(x, y), 200, goblinForce)))
+                case 'E' =>
+                  ('.', Some(Minion(c, ids.next, Point(x, y), 200, elfForce)))
               }
             }
             .foldLeft(("", List.empty[Option[Minion]])) { (acc, v) =>
@@ -373,7 +375,7 @@ object Day15 {
     }
   }
 
-  def solution1(lines: Iterator[String]): (Int, State) = {
+  def solution1(lines: List[String]): (Int, State) = {
     val state = Dungeon.parse(lines)
 
     @tailrec
@@ -386,11 +388,41 @@ object Day15 {
     round()
   }
 
+  def solution2(lines: List[String]): (Int, State) = {
+    @tailrec
+    def tryAt(elfForce: Int = 4): (Int, State) = {
+      println(s"at level $elfForce")
+
+      val state = Dungeon.parse(lines, elfForce)
+
+      @tailrec
+      def round(count: Int = 0, state: State = state): Option[(Int, State)] =
+        if (state.minionsDead.exists { _.minionType == Elf })
+          None
+        else if (state.minions.groupBy { _.minionType }.size == 1)
+          Some(((count - 1) * (state.minions.map { _.hitpoints }.sum), state))
+        else
+          round(count + 1, state.round())
+
+      round() match {
+        case Some(v) =>
+          v
+        case None =>
+          tryAt(elfForce + 1)
+      }
+    }
+
+    tryAt()
+  }
+
   def main(args: Array[String]): Unit = {
     val lines = Source
       .fromResource("input-15.data")
       .getLines()
+      .toList
 
     println(s"solution 1: ${solution1(lines)}")
+
+    println(s"solution 2: ${solution2(lines)}")
   }
 }
