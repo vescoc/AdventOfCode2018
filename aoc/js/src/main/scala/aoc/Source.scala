@@ -15,7 +15,7 @@ object Source extends SourceContract {
     val content = resource match {
       case patternRe(digits) =>
         Reflect
-          .lookupLoadableModuleClass(s"aoc.Input${digits}$$")
+          .lookupLoadableModuleClass(s"aoc.Input$digits$$")
           .get
           .loadModule()
           .asInstanceOf[ContentProvider]

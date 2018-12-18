@@ -15,7 +15,8 @@ object Day03UI {
       }
 
     val container = document.createElement("div").asInstanceOf[html.Div]
-    container.style = s"width: ${Math.min((Mag * dom.window.innerWidth).toInt, maxX)}px;height:${Math.min((Mag * dom.window.innerHeight).toInt, maxY)}px;overflow:auto;border:1px solid;"
+    container.style =
+      s"width: ${Math.min((Mag * dom.window.innerWidth).toInt, maxX)}px;height:${Math.min((Mag * dom.window.innerHeight).toInt, maxY)}px;overflow:auto;border:1px solid;"
 
     val canvas = document.createElement("canvas").asInstanceOf[html.Canvas]
     canvas.style = "display:block;"
@@ -33,12 +34,11 @@ object Day03UI {
         ext.Color.all(1 + r.id % (ext.Color.all.size - 1))
     }
 
-    def render(): Unit = {
+    def render(): Unit =
       input foreach { r =>
         ctx.fillStyle = r.color.toHex
         ctx.fillRect(r.x.toDouble, r.y.toDouble, (r.x + r.w).toDouble, (r.y + r.h).toDouble)
       }
-    }
 
     render()
   }

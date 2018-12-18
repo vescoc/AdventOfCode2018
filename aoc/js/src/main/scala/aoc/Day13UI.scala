@@ -26,11 +26,14 @@ object Day13UI {
     var carts = problem.carts
 
     ctx.setTransform(
-      canvas.width * Mag / problem.TrackWidth, 0.0,
-      0.0,  canvas.height * Mag / problem.TrackHeight,
-      0.0, 0.0
+      canvas.width * Mag / problem.TrackWidth,
+      0.0,
+      0.0,
+      canvas.height * Mag / problem.TrackHeight,
+      0.0,
+      0.0
     )
-    
+
     setTimeout(timeout) {
       tick()
     }
@@ -47,13 +50,11 @@ object Day13UI {
       ()
     }
 
-    def render(): Unit = {
+    def render(): Unit =
       //ctx.clearRect(0.0, 0.0, canvas.width.toDouble, canvas.height.toDouble)
-
       carts foreach { cart =>
         ctx.fillStyle = ext.Color.all(1 + cart.id % (ext.Color.all.size - 1)).toHex
         ctx.fillRect(cart.location.x.toDouble, cart.location.y.toDouble, 1, 1)
       }
-    }
   }
 }
