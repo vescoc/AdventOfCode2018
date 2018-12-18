@@ -57,11 +57,9 @@ object Day17 {
             for {
               x <- (min._1 - 1) to (max._1 + 1)
             } yield { apply(x, y) }
-          )
-            .mkString("")
+          ).mkString("")
         }
-      )
-        .mkString("\n")
+      ).mkString("\n")
 
     def ant() = new Ant(p => apply(p._1, p._2))
 
@@ -134,7 +132,6 @@ object Day17 {
             }
 
           case ClayFound =>
-
           case Up =>
             position = (position._1, position._2 - 1)
             state = Wait
@@ -234,11 +231,9 @@ object Day17 {
                   for {
                     x <- (min._1 - 1) to (max._1 + 1)
                   } yield { apply((x, y)) }
-                )
-                  .mkString("")
+                ).mkString("")
               }
-            )
-              .mkString("\n")
+            ).mkString("\n")
           ) ++ (
             if (leftAnt != null)
               List(leftAnt.toString)
@@ -280,6 +275,5 @@ object Day17 {
         }
     )
 
-  def main(args: Array[String]): Unit = {
-  }
+  def main(args: Array[String]): Unit = {}
 }

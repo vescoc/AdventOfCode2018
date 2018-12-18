@@ -1,6 +1,6 @@
 package aoc
 
-import org.scalatest.{WordSpec, MustMatchers}
+import org.scalatest.{MustMatchers, WordSpec}
 
 import Day17._
 
@@ -37,7 +37,9 @@ class Day17Spec extends WordSpec with MustMatchers {
 
       val ant = ground.ant()
 
-      (1 to 200) foreach { _ => ant.walk() }
+      (1 to 200) foreach { _ =>
+        ant.walk()
+      }
 
       println(ant)
     }
