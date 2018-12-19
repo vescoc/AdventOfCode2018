@@ -138,47 +138,40 @@ object Day19 {
 
     println(s"solution 1: $solution1")
 
-    /*
-     |0=a, 1=b, 2=c, 3=d, 4=e, 5=f
-     |#ip 2
-     |0: addi 2 16 2 | jp 0 + 16 + 1 (17)
-     |1: seti 1 0 1 | b = 1
-     |2: seti 1 4 3 | d = 1
-     |3: mulr 1 3 4 | e = b * d
-     |4: eqrr 4 5 4 | e = if e == f
-     |5: addr 4 2 2 | jp e + 5 + 1 (6 / 7 e)
-     |6: addi 2 1 2 | jp 6 + 1 + 1 (8)
-     |7: addr 1 0 0 | a = b + a
-     |8: addi 3 1 3 | d = d + 1
-     |9: gtrr 3 5 4 | e = if d > f
-     |10: addr 2 4 2 | jp 10 + e + 1 (11 / 12 e)
-     |11: seti 2 5 2 | jp 2 + 1 (3)
-     |12: addi 1 1 1 | b = b + 1
-     |13: gtrr 1 5 4 | e = if b > f
-     |14: addr 4 2 2 | jp e + 14 + 1 (15 / 16 e)
-     |15: seti 1 1 2 | jp 1 + 1 (2)
-     |16: mulr 2 2 2 | jp 16 * 16 + 1
-     |17: addi 5 2 5 | f = 17 + f
-     |18: mulr 5 5 5 | f = f * f
-     |19: mulr 2 5 5 | f = 19 * f
-     |20: muli 5 11 5 | f = f * 11
-     |21: addi 4 5 4 | e = e + 5
-     |22: mulr 4 2 4 | e = e * 22
-     |23: addi 4 9 4 | e = e + 9
-     |24: addr 5 4 5 | f = f + e
-     |25: addr 2 0 2 | jp 25 + a + 1 (26 + a)
-     |26: seti 0 0 2 | jp 0 + 1 (1)
-     |27: setr 2 3 4 | e = 27 + d
-     |28: mulr 4 2 4 | e = e * 28
-     |29: addr 2 4 4 | e = 29 + e
-     |30: mulr 2 4 4 | e = 30 * e
-     |31: muli 4 14 4 | e = e * 14
-     |32: mulr 4 2 4 | e = 32 * e
-     |33: addr 5 4 5 | f = f + e
-     |34: seti 0 6 0 | a = 0
-     |35: seti 0 3 2 | jp 0 + 1 (1)
-     */
+    lazy val prime: Stream[Int] = {
+      def next(n: Int, current: Stream[Int]): Stream[Int] = {
+        val head = current.head
+        if (head > n / 2)
+          n #:: next(n + 1, prime.tail)
+        else if (n % head == 0)
+          next(n + 1, current.tail)
+        else
+          next(n, current.tail)
+      }
 
-    //val solution2 = cpu.run(Registries(a = 1), istructions)
+      1 #:: 2 #:: next(3, prime.tail)
+    }
+
+    // San Maxima!
+    def factor(value: Int): List[Int] = {
+      @tailrec 
+      def f(value: Int, current: List[Int], prime: Stream[Int]): List[Int] = {
+        val head = prime.head
+        if (value % head == 0)
+          f(value / head, head :: current, prime)
+        else if (head > value / 2)
+          value :: current
+        else
+          f(value, current, prime.tail)
+      }
+
+      f(value, List(1), prime.tail)
+    }
+
+    val inputValue = 10551355
+
+    val factors = factor(inputValue)
+
+    println(s"solution 2: ${factors.combinations(2).foldLeft(inputValue + 1) { (acc, p) => acc + p.product }}")
   }
 }
