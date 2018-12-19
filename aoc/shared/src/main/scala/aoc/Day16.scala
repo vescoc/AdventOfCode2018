@@ -66,9 +66,9 @@ object Day16 {
     val gtir: OpCode = AOpCode("gtir", (r, i) => r(i.c) = if (i.a > r(i.b)) 1 else 0)
     val gtri: OpCode = AOpCode("gtri", (r, i) => r(i.c) = if (r(i.a) > i.b) 1 else 0)
     val gtrr: OpCode = AOpCode("gtrr", (r, i) => r(i.c) = if (r(i.a) > r(i.b)) 1 else 0)
-    val eqir: OpCode = AOpCode("gtir", (r, i) => r(i.c) = if (i.a == r(i.b)) 1 else 0)
-    val eqri: OpCode = AOpCode("gtri", (r, i) => r(i.c) = if (r(i.a) == i.b) 1 else 0)
-    val eqrr: OpCode = AOpCode("gtrr", (r, i) => r(i.c) = if (r(i.a) == r(i.b)) 1 else 0)
+    val eqir: OpCode = AOpCode("eqir", (r, i) => r(i.c) = if (i.a == r(i.b)) 1 else 0)
+    val eqri: OpCode = AOpCode("eqri", (r, i) => r(i.c) = if (r(i.a) == i.b) 1 else 0)
+    val eqrr: OpCode = AOpCode("eqrr", (r, i) => r(i.c) = if (r(i.a) == r(i.b)) 1 else 0)
 
     private[OpCodes] case class AOpCode(val name: String, f: (Registries, Istruction) => Registries) extends OpCode {
       def run(r: Registries, i: Istruction) = f(r, i)

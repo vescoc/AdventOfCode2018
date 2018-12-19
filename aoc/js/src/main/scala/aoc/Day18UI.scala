@@ -9,7 +9,7 @@ import aoc.Day18._
 import aoc.Day18.LandscapeType._
 
 object Day18UI {
-  val Mag = 1.0
+  val Mag = 15.0
   val Timeout = 25.0
 
   def main(args: Array[String]): Unit = {
