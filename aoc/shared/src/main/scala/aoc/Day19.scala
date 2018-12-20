@@ -142,14 +142,14 @@ object Day19 {
       def next(n: Int, current: Stream[Int]): Stream[Int] = {
         val head = current.head
         if (head > n / 2)
-          n #:: next(n + 1, prime.tail)
+          n #:: next(n + 1, prime)
         else if (n % head == 0)
           next(n + 1, current.tail)
         else
           next(n, current.tail)
       }
 
-      1 #:: 2 #:: next(3, prime.tail)
+      2 #:: next(3, prime)
     }
 
     // San Maxima!
@@ -165,13 +165,19 @@ object Day19 {
           f(value, current, prime.tail)
       }
 
-      f(value, List(1), prime.tail)
+      f(value, List(1), prime)
     }
 
-    val inputValue = 10551355
+    {
+      val inputValue = 955
+      val factors = factor(inputValue)
+      println(s"solution 1: ${(factors.combinations(factors.size - 2).toSet ++ List(List(1), List(inputValue))).foldLeft(0) { (acc, p) => acc + p.product }}")
+    }
 
-    val factors = factor(inputValue)
-
-    println(s"solution 2: ${factors.combinations(2).foldLeft(inputValue + 1) { (acc, p) => acc + p.product }}")
+    { // 12690000
+      val inputValue = 10551355
+      val factors = factor(inputValue)
+      println(s"solution 2: ${(factors.combinations(factors.size - 2).toSet ++ List(List(1), List(inputValue))).foldLeft(0) { (acc, p) => acc + p.product }}")
+    }
   }
 }
