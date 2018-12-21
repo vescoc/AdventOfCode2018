@@ -50,8 +50,6 @@ object Day19 {
     def run(r: Registries, istruction: Istruction): Registries = {
       val result = istruction.run((r(rip) = r.pc)).updatePc(rip)
 
-      // println(s"$r $istruction $result")
-
       result
     }
 
@@ -60,8 +58,13 @@ object Day19 {
       def execute(r: Registries): Registries =
         if (r.pc < 0 || r.pc >= istructions.size)
           r
-        else
-          execute(run(r, istructions(r.pc)))
+        else {
+          val i = istructions(r.pc)
+          if (i.opcode == OpCodes.brk)
+            r
+          else
+            execute(run(r, i))
+        }
 
       execute(r)
     }
@@ -102,7 +105,9 @@ object Day19 {
       gtrr,
       eqir,
       eqri,
-      eqrr
+      eqrr,
+      nop,
+      brk
     )
 
     lazy val map = all.map { opcode => opcode.name -> opcode }.toMap
@@ -123,6 +128,9 @@ object Day19 {
     val eqir: OpCode = AOpCode("eqir", (r, i) => r(i.c) = if (i.a == r(i.b)) 1 else 0)
     val eqri: OpCode = AOpCode("eqri", (r, i) => r(i.c) = if (r(i.a) == i.b) 1 else 0)
     val eqrr: OpCode = AOpCode("eqrr", (r, i) => r(i.c) = if (r(i.a) == r(i.b)) 1 else 0)
+
+    val nop: OpCode = AOpCode("nop", (r, i) => r)
+    val brk: OpCode = AOpCode("brk", (r, i) => r)
 
     private[OpCodes] case class AOpCode(val name: String, f: (Registries, Istruction) => Registries) extends OpCode {
       def run(r: Registries, i: Istruction) = f(r, i)

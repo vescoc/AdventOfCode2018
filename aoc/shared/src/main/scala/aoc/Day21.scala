@@ -8,6 +8,20 @@ object Day21 {
 
     val r = cpu.run(Registries(), istructions.take(istructions.size - 3))
 
-    println(s"solution 1: ${r(1)}")
+    println(s"solution 1: ${cpu.run(Registries(a = r(1)), istructions)}")
+
+    (1 until 10).foldLeft(r) { (acc, n) =>
+      val r =
+        cpu
+          .run(
+            acc,
+            List.fill(6)(Istruction(OpCodes.map("nop"), 0, 0, 0))
+              ++ (istructions.take(istructions.size - 3).drop(6))
+          )
+
+      println(s"$n: $acc")
+
+      r
+    }
   }
 }
