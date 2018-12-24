@@ -8,15 +8,50 @@ object Day23 {
   }
 
   case class Nanobot(pos: Point, r: Int) {
-    def distanceFrom(nanobot: Nanobot) = Point.distance(nanobot.pos, pos)
+    def distanceFrom(nanobot: Nanobot): Int = distanceFrom(nanobot.pos)
+
+    def distanceFrom(point: Point): Int = Point.distance(pos, point)
   }
 
-  case class Nanobots(nanobots: Seq[Nanobot]) {
+  case class Nanobots(nanobots: Seq[Nanobot], bruteForce: Boolean = true) {
     lazy val strongest = nanobots.maxBy { _.r }
 
-    def inRange(nanobot: Nanobot) =
+    def inRange(nanobot: Nanobot): Seq[Nanobot] =
       nanobots
         .filter { _.distanceFrom(nanobot) <= nanobot.r }
+
+    def inRange(point: Point): Seq[Nanobot] =
+      nanobots
+        .filter { nanobot => nanobot.distanceFrom(point) <= nanobot.r }
+
+    lazy val betterCoordinates: (Int, Set[Point]) =
+      if (bruteForce) {
+        val origin = Point(0, 0, 0)
+
+        val MaxRange = nanobots
+          .foldLeft(Int.MinValue) { (acc, nanobot) =>
+            Math.max(acc, nanobot.distanceFrom(origin))
+          }
+
+        (
+          for {
+            x <- -MaxRange to +MaxRange
+            y <- -MaxRange to +MaxRange
+            z <- -MaxRange to +MaxRange
+          } yield { Point(x, y, z) }
+        )
+          .map { point => (nanobots.filter { nanobot => nanobot.distanceFrom(point) <= nanobot.r }.size) -> point }
+          .foldLeft((Int.MinValue, Set.empty[Point])) { (acc, info) =>
+            if (acc._1 == info._1)
+              acc._1 -> (acc._2 + info._2)
+            else if (acc._1 < info._1) {
+              info._1 -> Set(info._2)
+            } else
+                acc
+          }
+      } else {
+        ???
+      }
   }
 
   object Nanobots {

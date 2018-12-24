@@ -26,4 +26,19 @@ class Day23Spec extends WordSpec with MustMatchers {
       nanobots.inRange(nanobots.strongest).size mustBe (7)
     }
   }
+
+  "better coordinates" must {
+    val nanobots = Nanobots.parse(
+      """|pos=<10,12,12>, r=2
+         |pos=<12,14,12>, r=2
+         |pos=<16,12,12>, r=4
+         |pos=<14,14,14>, r=6
+         |pos=<50,50,50>, r=200
+         |pos=<10,10,10>, r=5""".stripMargin.lines
+    )
+
+    "equals to example value" in {
+      nanobots.betterCoordinates mustBe (5 -> Set(Point(12, 12, 12)))
+    }
+  }
 }
