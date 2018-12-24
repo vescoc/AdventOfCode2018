@@ -21,18 +21,25 @@ object Day24 {
       if (group.units <= 0)
         copy(immuneSystem = immuneSystem.filterNot { _.id == group.id })
       else
-        copy(immuneSystem = immuneSystem.map { that => if (that.id == group.id) group else that })
+        copy(immuneSystem = immuneSystem.map { that =>
+          if (that.id == group.id) group else that
+        })
 
     def updateInfection(group: Group) =
       if (group.units <= 0)
         copy(infection = infection.filterNot { _.id == group.id })
       else
-        copy(infection = infection.map { that => if (that.id == group.id) group else that })
+        copy(infection = infection.map { that =>
+          if (that.id == group.id) group else that
+        })
 
     def units() =
-      (immuneSystem ++ infection)
-        .map { _.units }
-        .sum
+      (immuneSystem ++ infection).map { _.units }.sum
+
+    def boost(value: Int) =
+      copy(immuneSystem = immuneSystem.map { g =>
+        g.boost(value)
+      })
 
     override def toString =
       s"""|State:
@@ -45,8 +52,10 @@ object Day24 {
   object State {
     val immuneSystemRe = """Immune System:""".r
     val infectionRe = """Infection:""".r
-    val groupRe = """(\d+) units each with (\d+) hit points \(([^)]+)\) with an attack that does (\d+) (.+) damage at initiative (\d+)""".r
-    val groupSimpleRe = """(\d+) units each with (\d+) hit points with an attack that does (\d+) (.+) damage at initiative (\d+)""".r
+    val groupRe =
+      """(\d+) units each with (\d+) hit points \(([^)]+)\) with an attack that does (\d+) (.+) damage at initiative (\d+)""".r
+    val groupSimpleRe =
+      """(\d+) units each with (\d+) hit points with an attack that does (\d+) (.+) damage at initiative (\d+)""".r
     val immuneToRe = """immune to ([^;]+)""".r
     val weakToRe = """weak to ([^;]+)""".r
     val multiSpecRe = """(.+); (.+)""".r
@@ -77,6 +86,8 @@ object Day24 {
 
         copy(units = if (remainder < 0) 0 else remainder)
       }
+
+      def boost(value: Int) = copy(attackDamage = attackDamage + value)
     }
 
     def immuneSystemVsInfection(
@@ -105,23 +116,45 @@ object Day24 {
           nextState.updateImmuneSystem(ndg)
         case _ =>
           nextState
-      }    
+      }
 
     def round(state: State): State =
       (targetSelection andThen attack)(state)
 
     @tailrec
-    def game(state: State): State = {
+    def game(state: State): Either[State, State] =
       if (state.immuneSystem.isEmpty || state.infection.isEmpty)
-        state
-      else
-        game(round(state))
+        Right(state)
+      else {
+        val newState = round(state)
+        if (newState == state)
+          Left(newState)
+        else
+          game(newState)
+      }
+
+    def boost(state: State): (State, Int) = {
+      @tailrec
+      def boost(value: Int): (State, Int) =
+        game(state.boost(value)) match {
+          case Right(s) =>
+            if (s.immuneSystem.isEmpty)
+              boost(value + 1)
+            else
+              (s, value)
+          case _ =>
+            boost(value + 1)
+        }
+
+      boost(0)
     }
 
     type TargetSelectionDamage = ((Group, Group), Int)
 
-    case class AttackAction(attackingGroup: Group, defendingGroup: Group, action: (State, State, Int, Int) => State) extends Comparable[AttackAction] {
-      def run(currentState: State, nextState: State) = action(currentState, nextState, attackingGroup.id, defendingGroup.id)
+    case class AttackAction(attackingGroup: Group, defendingGroup: Group, action: (State, State, Int, Int) => State)
+        extends Comparable[AttackAction] {
+      def run(currentState: State, nextState: State) =
+        action(currentState, nextState, attackingGroup.id, defendingGroup.id)
 
       def compareTo(that: AttackAction): Int = attackingGroup.initiative compare that.attackingGroup.initiative
     }
@@ -156,11 +189,19 @@ object Day24 {
     }
 
     lazy val targetSelection: PartialFunction[State, (State, TargetSelection)] = {
-      def targetSelectionFrom(attackingGroup: List[Group], defendingGroup: List[Group], action: (State, State, Int, Int) => State): List[AttackAction] = {
+      def targetSelectionFrom(
+        attackingGroup: List[Group],
+        defendingGroup: List[Group],
+        action: (State, State, Int, Int) => State
+      ): List[AttackAction] = {
         val l = attackingGroup.sorted(GroupEffectivePowerOrdering)
 
         @tailrec
-        def targetSelectionFromR(attackingGroups: List[Group], defendingGroups: List[Group], result: List[TargetSelectionDamage]): List[TargetSelectionDamage] =
+        def targetSelectionFromR(
+          attackingGroups: List[Group],
+          defendingGroups: List[Group],
+          result: List[TargetSelectionDamage]
+        ): List[TargetSelectionDamage] =
           if (defendingGroups.isEmpty)
             result
           else
@@ -185,13 +226,15 @@ object Day24 {
                     defendingGroups,
                     result
                   )
-                  
+
               case _ =>
                 result
             }
 
         targetSelectionFromR(l, defendingGroup, List.empty)
-          .map { i => AttackAction(i._1._1, i._1._2, action) }
+          .map { i =>
+            AttackAction(i._1._1, i._1._2, action)
+          }
       }
 
       {
@@ -208,11 +251,16 @@ object Day24 {
 
     lazy val attack: PartialFunction[(State, TargetSelection), State] = {
       {
-        case (state, TargetSelection(immuneSystemTargets, infectionTargets)) if !immuneSystemTargets.isEmpty && !infectionTargets.isEmpty =>
+        case (state, TargetSelection(immuneSystemTargets, infectionTargets))
+            if !immuneSystemTargets.isEmpty && !infectionTargets.isEmpty =>
           (immuneSystemTargets ++ infectionTargets)
             .sorted(Ordering.ordered[AttackAction])
             .reverse
-            .foldLeft(state) { (nextState, attackAction) => attackAction.run(nextState, nextState) }
+            .foldLeft(state) { (nextState, attackAction) =>
+              attackAction.run(nextState, nextState)
+            }
+        case (state, _) =>
+          state
       }
     }
 
@@ -227,7 +275,7 @@ object Day24 {
             case (weakToRe(weaknesses), immuneToRe(immunities)) =>
               (split(weaknesses), split(immunities))
           }
-        case weakToRe(weaknesses) => (split(weaknesses), Set.empty)
+        case weakToRe(weaknesses)   => (split(weaknesses), Set.empty)
         case immuneToRe(immunities) => (Set.empty, split(immunities))
       }
     }
@@ -236,58 +284,61 @@ object Day24 {
       val ids = Map(1 -> Iterator.from(1), 2 -> Iterator.from(1))
 
       val r = lines
-        .foldLeft[(Int, Option[List[Group]], Option[List[Group]], Option[List[Group]])]((0, None, None, None)) { (acc, line) =>
-          (acc, line) match {
-            case ((0, None, _, None), immuneSystemRe()) =>
-              (1, None, acc._2, Some(List.empty))
-            case ((0, _, None, None), infectionRe()) =>
-              (2, acc._2, None, Some(List.empty))
-            case ((_, _, _, Some(l)), groupRe(units, hitpoints, specs, attackDamage, attackType, initiative)) if (acc._1 != 0) =>
-              val (weaknesses, immunities) = parseSpecs(specs)
+        .foldLeft[(Int, Option[List[Group]], Option[List[Group]], Option[List[Group]])]((0, None, None, None)) {
+          (acc, line) =>
+            (acc, line) match {
+              case ((0, None, _, None), immuneSystemRe()) =>
+                (1, None, acc._2, Some(List.empty))
+              case ((0, _, None, None), infectionRe()) =>
+                (2, acc._2, None, Some(List.empty))
+              case ((_, _, _, Some(l)), groupRe(units, hitpoints, specs, attackDamage, attackType, initiative))
+                  if (acc._1 != 0) =>
+                val (weaknesses, immunities) = parseSpecs(specs)
 
-              (
-                acc._1,
-                acc._2,
-                acc._3,
-                Some(
-                  Group(
-                    ids(acc._1).next,
-                    units.toInt,
-                    hitpoints.toInt,
-                    attackDamage.toInt,
-                    attackType,
-                    weaknesses,
-                    immunities,
-                    initiative.toInt
-                  ) :: l
+                (
+                  acc._1,
+                  acc._2,
+                  acc._3,
+                  Some(
+                    Group(
+                      ids(acc._1).next,
+                      units.toInt,
+                      hitpoints.toInt,
+                      attackDamage.toInt,
+                      attackType,
+                      weaknesses,
+                      immunities,
+                      initiative.toInt
+                    ) :: l
+                  )
                 )
-              )
-            case ((_, _, _, Some(l)), groupSimpleRe(units, hitpoints, attackDamage, attackType, initiative)) if (acc._1 != 0) =>
-              (
-                acc._1,
-                acc._2,
-                acc._3,
-                Some(
-                  Group(
-                    ids(acc._1).next,
-                    units.toInt,
-                    hitpoints.toInt,
-                    attackDamage.toInt,
-                    attackType,
-                    Set.empty,
-                    Set.empty,
-                    initiative.toInt
-                  ) :: l
+              case ((_, _, _, Some(l)), groupSimpleRe(units, hitpoints, attackDamage, attackType, initiative))
+                  if (acc._1 != 0) =>
+                (
+                  acc._1,
+                  acc._2,
+                  acc._3,
+                  Some(
+                    Group(
+                      ids(acc._1).next,
+                      units.toInt,
+                      hitpoints.toInt,
+                      attackDamage.toInt,
+                      attackType,
+                      Set.empty,
+                      Set.empty,
+                      initiative.toInt
+                    ) :: l
+                  )
                 )
-              )
-            case ((_, _, _, Some(l)), "") if acc._1 != 0 =>
-              acc._1 match {
-                case 1 =>
-                  (0, Some(l), acc._3, None)
-                case 2 =>
-                  (0, acc._2, Some(l), None)
-              }
-          }
+              case ((_, _, _, Some(l)), "") if acc._1 != 0 =>
+                acc._1 match {
+                  case 1 =>
+                    (0, Some(l), acc._3, None)
+                  case 2 =>
+                    (0, acc._2, Some(l), None)
+                }
+            }
         }
 
       r._1 match {
@@ -302,12 +353,10 @@ object Day24 {
   def main(args: Array[String]): Unit = {
     val state = State.parse(Source.fromResource("input-24.data").getLines())
 
-    println(state)
-
-    val endState = game(state)
-
-    println(endState)
+    val Right(endState) = game(state)
 
     println(s"solution 1: ${endState.units}")
+
+    println(s"solution 2: ${boost(state)._1.units}")
   }
 }

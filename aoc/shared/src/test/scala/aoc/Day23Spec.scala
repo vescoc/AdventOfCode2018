@@ -1,6 +1,6 @@
 package aoc
 
-import org.scalatest.{WordSpec, MustMatchers}
+import org.scalatest.{MustMatchers, WordSpec}
 
 import Day23._
 

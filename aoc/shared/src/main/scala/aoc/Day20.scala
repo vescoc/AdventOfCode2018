@@ -26,7 +26,7 @@ object Day20 {
         .foldLeft(((Int.MaxValue, Int.MaxValue), (Int.MinValue, Int.MinValue))) { (acc, kv) =>
           (acc._1 min kv._1, acc._2 max kv._1)
         }
-    } 
+    }
 
     override def toString: String =
       (
@@ -43,17 +43,14 @@ object Day20 {
               else
                 map.getOrElse((x, y), ' ')
             }
-          )
-            .map { c =>
-              c match {
-                case Unknown => Wall
-                case _ => c
-              }
+          ).map { c =>
+            c match {
+              case Unknown => Wall
+              case _       => c
             }
-            .mkString
+          }.mkString
         }
-      )
-        .mkString("\n")
+      ).mkString("\n")
   }
 
   def furthest(path: String): Int = {

@@ -110,7 +110,9 @@ object Day19 {
       brk
     )
 
-    lazy val map = all.map { opcode => opcode.name -> opcode }.toMap
+    lazy val map = all.map { opcode =>
+      opcode.name -> opcode
+    }.toMap
 
     val addr: OpCode = AOpCode("addr", (r, i) => r(i.c) = r(i.a) + r(i.b))
     val addi: OpCode = AOpCode("addi", (r, i) => r(i.c) = r(i.a) + i.b)
@@ -162,7 +164,7 @@ object Day19 {
 
     // San Maxima!
     def factor(value: Int): List[Int] = {
-      @tailrec 
+      @tailrec
       def f(value: Int, current: List[Int], prime: Stream[Int]): List[Int] = {
         val head = prime.head
         if (value % head == 0)
@@ -179,13 +181,21 @@ object Day19 {
     {
       val inputValue = 955
       val factors = factor(inputValue)
-      println(s"solution 1: ${(factors.combinations(factors.size - 2).toSet ++ List(List(1), List(inputValue))).foldLeft(0) { (acc, p) => acc + p.product }}")
+      println(
+        s"solution 1: ${(factors.combinations(factors.size - 2).toSet ++ List(List(1), List(inputValue))).foldLeft(0) { (acc, p) =>
+          acc + p.product
+        }}"
+      )
     }
 
     { // 12690000
       val inputValue = 10551355
       val factors = factor(inputValue)
-      println(s"solution 2: ${(factors.combinations(factors.size - 2).toSet ++ List(List(1), List(inputValue))).foldLeft(0) { (acc, p) => acc + p.product }}")
+      println(
+        s"solution 2: ${(factors.combinations(factors.size - 2).toSet ++ List(List(1), List(inputValue))).foldLeft(0) { (acc, p) =>
+          acc + p.product
+        }}"
+      )
     }
   }
 }

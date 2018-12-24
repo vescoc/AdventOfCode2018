@@ -1,6 +1,6 @@
 package aoc
 
-import org.scalatest.{WordSpec, MustMatchers}
+import org.scalatest.{MustMatchers, WordSpec}
 
 import Day22._
 
@@ -14,8 +14,8 @@ class Day22Spec extends WordSpec with MustMatchers {
     )
 
     "parse" in {
-      maze.depth mustBe(510)
-      maze.target mustBe((10, 10))
+      maze.depth mustBe (510)
+      maze.target mustBe ((10, 10))
     }
 
     "equals to test values" in {

@@ -2,7 +2,7 @@ package aoc
 
 object Day22 {
   val depthRe = """depth: (\d+)""".r
-  val target= """target: (\d+),(\d+)""".r
+  val target = """target: (\d+),(\d+)""".r
 
   object MazeType extends Enumeration {
     type MazeType = Int
@@ -24,9 +24,9 @@ object Day22 {
       } {
         val geologicalIndex = (x, y) match {
           case (0, 0) | `target` => 0
-          case (0, _) => y * 48271L
-          case (_, 0) => x * 16807L
-          case (_, _) => arr(x - 1)(y)._2 * arr(x)(y - 1)._2
+          case (0, _)            => y * 48271L
+          case (_, 0)            => x * 16807L
+          case (_, _)            => arr(x - 1)(y)._2 * arr(x)(y - 1)._2
         }
 
         val erosionLevel = (geologicalIndex + depth) % 20183
@@ -60,13 +60,11 @@ object Day22 {
           x <- 0 to target._1
           y <- 0 to target._2
         } yield { map(x)(y)._3 }
-      )
-        .sum
+      ).sum
   }
 
   def parse(data: String) = {
-    val maze = data
-      .lines
+    val maze = data.lines
       .foldLeft[(Option[Int], Option[(Int, Int)])]((None, None)) { (acc, line) =>
         (acc, line) match {
           case ((None, _), depthRe(depth)) =>
@@ -77,7 +75,7 @@ object Day22 {
       }
 
     Maze(maze._1.get, maze._2.get)
-  }    
+  }
 
   def main(args: Array[String]): Unit = {
     val maze = parse(Source.fromResource("input-22.data").mkString)

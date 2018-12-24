@@ -10,8 +10,7 @@ object Day21 {
 
     println(s"solution 1: ${cpu.run(Registries(a = r(1)), istructions)}")
 
-    istructions
-      .zipWithIndex
+    istructions.zipWithIndex
       .foreach { p =>
         println(s"${p._2}: ${p._1}")
       }

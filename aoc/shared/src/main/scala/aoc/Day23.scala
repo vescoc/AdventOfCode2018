@@ -22,7 +22,9 @@ object Day23 {
 
     def inRange(point: Point): Seq[Nanobot] =
       nanobots
-        .filter { nanobot => nanobot.distanceFrom(point) <= nanobot.r }
+        .filter { nanobot =>
+          nanobot.distanceFrom(point) <= nanobot.r
+        }
 
     lazy val betterCoordinates: (Int, Set[Point]) =
       if (bruteForce) {
@@ -39,15 +41,18 @@ object Day23 {
             y <- -MaxRange to +MaxRange
             z <- -MaxRange to +MaxRange
           } yield { Point(x, y, z) }
-        )
-          .map { point => (nanobots.filter { nanobot => nanobot.distanceFrom(point) <= nanobot.r }.size) -> point }
+        ).map { point =>
+            (nanobots.filter { nanobot =>
+              nanobot.distanceFrom(point) <= nanobot.r
+            }.size) -> point
+          }
           .foldLeft((Int.MinValue, Set.empty[Point])) { (acc, info) =>
             if (acc._1 == info._1)
               acc._1 -> (acc._2 + info._2)
             else if (acc._1 < info._1) {
               info._1 -> Set(info._2)
             } else
-                acc
+              acc
           }
       } else {
         ???
@@ -59,13 +64,11 @@ object Day23 {
 
     def parse(lines: Iterator[String]) =
       Nanobots(
-        lines
-          .map { line =>
-            line match {
-              case re(x, y, z, r) => Nanobot(Point(x.toInt, y.toInt, z.toInt), r.toInt)
-            }
+        lines.map { line =>
+          line match {
+            case re(x, y, z, r) => Nanobot(Point(x.toInt, y.toInt, z.toInt), r.toInt)
           }
-          .toSeq
+        }.toSeq
       )
   }
 

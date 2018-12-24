@@ -1,12 +1,13 @@
 package aoc
 
-import org.scalatest.{WordSpec, MustMatchers}
+import org.scalatest.{MustMatchers, WordSpec}
 
 import Day24._
 
 class Day24Spec extends WordSpec with MustMatchers {
   "method parse" must {
-    val testData = """|Immune System:
+    val testData =
+      """|Immune System:
                       |17 units each with 5390 hit points (weak to radiation, bludgeoning) with an attack that does 4507 fire damage at initiative 2
                       |989 units each with 1274 hit points (immune to fire; weak to bludgeoning, slashing) with an attack that does 25 slashing damage at initiative 3
                       |
@@ -31,9 +32,16 @@ class Day24Spec extends WordSpec with MustMatchers {
     }
 
     "game" in {
-      val s = State.game(state)
+      val Right(s) = State.game(state)
 
       s.units mustBe (5216)
+    }
+
+    "boost" in {
+      val (s, b) = State.boost(state)
+
+      b mustBe (1570)
+      s.units mustBe (51)
     }
   }
 }
