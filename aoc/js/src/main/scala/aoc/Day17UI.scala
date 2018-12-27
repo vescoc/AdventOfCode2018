@@ -40,10 +40,14 @@ object Day17UI {
 
     val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
-    ctx.translate(-ground.min._1 * Mag, 0)
+    ctx.translate(-(ground.min._1 - 5) * Mag, 0)
     ctx.scale(Mag, Mag)
 
     val ant = ground.ant()
+
+    var lastVisited = Set.empty[(Int, Int)]
+    var lastRest = Set.empty[(Int, Int)]
+    var lastAnts = Set.empty[(Int, Int)]
 
     renderBackground()
 
@@ -58,25 +62,28 @@ object Day17UI {
         }
 
       ctx.fillStyle = ext.Color.Blue.toHex
-      visited.foreach { p =>
+      (visited -- lastVisited).foreach { p =>
         val x = p._1.toDouble
         val y = p._2.toDouble
         ctx.fillRect(x, y, 1, 1)
       }
+      lastVisited = visited
 
       ctx.fillStyle = ext.Color(0, 128, 255).toHex
-      rest.foreach { p =>
+      (rest -- lastRest).foreach { p =>
         val x = p._1.toDouble
         val y = p._2.toDouble
         ctx.fillRect(x, y, 1, 1)
       }
+      lastRest = rest
 
       ctx.fillStyle = ext.Color.Red.toHex
-      ants.foreach { p =>
+      (ants -- lastAnts -- visited -- rest).foreach { p =>
         val x = p._1.toDouble
         val y = p._2.toDouble
         ctx.fillRect(x, y, 1, 1)
       }
+      lastAnts = ants
 
       waterCount.innerHTML = s"Water: ${ant.water} (${visited.size})"
       restWaterCount.innerHTML = s"Rest Water: ${ant.restWater} (${rest.size})"
