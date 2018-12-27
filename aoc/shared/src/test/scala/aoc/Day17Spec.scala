@@ -18,7 +18,7 @@ class Day17Spec extends WordSpec with MustMatchers {
             |y=13, x=498..504""".stripMargin.lines
       )
 
-      println(ground)
+      ground(495, 2) mustBe (GroundElement.Clay)
     }
   }
 
@@ -37,11 +37,9 @@ class Day17Spec extends WordSpec with MustMatchers {
 
       val ant = ground.ant()
 
-      (1 to 200) foreach { _ =>
-        ant.walk()
-      }
+      while (!ant.done) ant.walk()
 
-      println(ant)
+      ant.water() mustBe (57)
     }
   }
 }

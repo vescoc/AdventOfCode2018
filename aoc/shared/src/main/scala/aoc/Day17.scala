@@ -1,7 +1,5 @@
 package aoc
 
-import scala.collection.mutable
-
 object Day17 {
   val xre = """x=(\d+), y=(\d+)..(\d+)""".r
   val yre = """y=(\d+), x=(\d+)..(\d+)""".r
@@ -18,29 +16,18 @@ object Day17 {
 
   import GroundElement._
 
-  object State extends Enumeration {
-    type State = Value
-
-    val Done, Down, Wait, GoLeft, GoRight, ClayFound, Up, FallFound, WaitChild = Value
-  }
-
-  import State._
-
-  type Info = ((Int, Int)) => GroundElement
-
-  case class Ground(ground: Map[(Int, Int), GroundElement]) {
+  case class Ground(ground: Map[(Int, Int), GroundElement]) { g =>
     def apply(x: Int, y: Int) =
       ground.getOrElse(
         (x, y),
         if (x == 500 && y == 0) PrimarySource else Sand
       )
 
-    private implicit class MinPoint(point: (Int, Int)) {
+    private implicit class EPoint(point: (Int, Int)) {
       def min(that: (Int, Int)) = (Math.min(point._1, that._1), Math.min(point._2, that._2))
-    }
-
-    private implicit class MaxPoint(point: (Int, Int)) {
       def max(that: (Int, Int)) = (Math.max(point._1, that._1), Math.max(point._2, that._2))
+
+      def +(that: (Int, Int)) = (point._1 + that._1, point._2 + that._2)
     }
 
     lazy val (min, max) = ground
@@ -48,7 +35,11 @@ object Day17 {
         (acc._1 min value._1, acc._2 max value._1)
       }
 
-    override def toString =
+    override def toString = {
+      val (visited, ants) = Ant.ants.foldLeft((Set.empty[(Int, Int)], Set.empty[(Int, Int)])) { (acc, p) =>
+        ((acc._1 ++ p._2.visitedPositions), (acc._2 + p._2.currentPosition))
+      }
+
       (
         for {
           y <- (min._2 - 1) to (max._2 + 1)
@@ -56,201 +47,326 @@ object Day17 {
           (
             for {
               x <- (min._1 - 1) to (max._1 + 1)
-            } yield { apply(x, y) }
+            } yield {
+              if (ants.contains((x, y)))
+                AntMark
+              else if (visited.contains((x, y)))
+                Water
+              else
+                apply(x, y)
+            }
           ).mkString("")
         }
       ).mkString("\n")
+    }
 
-    def ant() = new Ant(p => apply(p._1, p._2))
+    trait Walk {
+      def walk(): Unit
+      def done(): Boolean
+      def water(): Int
+    }
 
-    class Ant(info: Info) {
-      val set: mutable.Set[(Int, Int)] = mutable.Set()
+    def ant(): Walk = new Walk {
+      val ant = Ant.VerticalAnt(None, (500, 0))
 
-      var state: State = Down
+      def walk(): Unit = {
+        Map(Ant.ants.toList: _*).map { _._2.run() }
 
-      var fatherAnt: Ant = null
-      var leftAnt: Ant = null
-      var rightAnt: Ant = null
-      var downAnt: Ant = null
+        while (!Ant.disposeableAnts.isEmpty) Ant.ants -= Ant.disposeableAnts.remove(0)
 
-      var position: (Int, Int) = (500, 0)
+        ()
+      }
 
-      def apply(position: (Int, Int) = position): GroundElement =
-        if (position == this.position)
-          AntMark
-        else if (set.contains(position))
-          Water
-        else
-          info(position)
+      def done() = ant.stateValue == Ant.StateValue.Done || ant.stateValue == Ant.StateValue.Filled
 
-      def walk(): Unit =
-        state match {
-          case Wait =>
-            leftAnt.walk()
-            rightAnt.walk()
+      def water() =
+        ant.visitedPositions.filter { p =>
+          p._2 >= g.min._2 && p._2 <= g.max._2
+        }.size
+    }
 
-            if (leftAnt.state == ClayFound && rightAnt.state == ClayFound) {
-              set ++= leftAnt.set
-              set ++= rightAnt.set
+    object Ant {
+      import scala.collection.mutable
 
-              leftAnt = null
-              rightAnt = null
+      val nextId = Iterator.from(0)
 
-              state = Up
-            } else if (leftAnt.state == Done && rightAnt.state == Done) {
-              set ++= leftAnt.set
-              set ++= rightAnt.set
+      val disposeableAnts = mutable.ListBuffer.empty[Int]
+      val ants = mutable.Map.empty[Int, State[_]]
 
-              leftAnt = null
-              rightAnt = null
+      object Direction extends Enumeration {
+        type Direction = (Int, Int)
 
-              state = Done
-            }
+        val Up = (0, -1)
+        val Down = (0, 1)
+        val Left = (-1, 0)
+        val Right = (+1, 0)
+      }
 
-          case WaitChild =>
-            downAnt.walk()
+      object StateValue extends Enumeration {
+        type StateValue = Value
 
-            if (downAnt.state == Done) {
-              set ++= downAnt.set
-              downAnt = null
+        val Running, Wait, Done, Blocked, Filled = Value
+      }
+      import StateValue._
 
-              state = Done
-            }
+      trait State[S <: State[_]] {
+        val id: Int
+        val fatherId: Option[Int]
+        val startPosition: (Int, Int)
+        val visitedPositions: mutable.Set[(Int, Int)]
 
-          case GoLeft =>
-            val np = (position._1 - 1, position._2)
-            apply(np) match {
-              case Clay =>
-                state = ClayFound
-              case _ =>
-                position = np
-                set += np
+        var stateValue: StateValue
+        var currentPosition: (Int, Int)
 
-                val up = (position._1, position._2 + 1)
-                if (apply(up) == Sand)
-                  state = FallFound
-            }
+        var refCount: Int
 
-          case ClayFound =>
-          case Up =>
-            position = (position._1, position._2 - 1)
-            state = Wait
+        def visitable(position: (Int, Int)): Boolean =
+          if (visitedPositions.contains(position))
+            false
+          else
+            getFatherState(fatherId)
+              .map { _.visitable(position) }
+              .getOrElse(g(position._1, position._2) == Sand)
 
-            leftAnt = {
-              val ant = new Ant(apply)
+        def getFatherState(id: Option[Int]): Option[State[_]] =
+          id match {
+            case Some(v) =>
+              ants.get(v)
+            case None =>
+              None
+          }
 
-              ant.fatherAnt = this
-              ant.state = GoLeft
-              ant.position = position
+        def run(): Unit
 
-              ant
-            }
+        def dispose() = {
+          refCount -= 1
+          if (refCount <= 0)
+            disposeableAnts += id
+        }
+      }
 
-            rightAnt = {
-              val ant = new Ant(apply)
+      trait GoVerticalState extends State[GoVerticalState] with TwoChildState[GoVerticalState] {
+        var dy: Int
+      }
 
-              ant.fatherAnt = this
-              ant.state = GoRight
-              ant.position = position
+      trait GoHorizontalState extends State[GoHorizontalState] with SingleChildState[GoHorizontalState] {
+        val dx: Int
+      }
 
-              ant
-            }
-
-          case GoRight =>
-            val np = (position._1 + 1, position._2)
-            apply(np) match {
-              case Clay =>
-                state = ClayFound
-              case _ =>
-                position = np
-                set += np
-
-                val up = (position._1, position._2 + 1)
-                if (apply(up) == Sand)
-                  state = FallFound
-            }
-
-          case FallFound =>
-            state = WaitChild
-
-            downAnt = {
-              val ant = new Ant(apply)
-
-              ant.fatherAnt = this
-              ant.state = Down
-              ant.position = position
-
-              ant
-            }
-
-          case Down =>
-            val np = (position._1, position._2 + 1)
-            if (np._2 > max._2)
-              state = Done
-            else {
-              apply(np) match {
-                case Clay =>
-                  state = Wait
-
-                  leftAnt = {
-                    val ant = new Ant(apply)
-
-                    ant.fatherAnt = this
-                    ant.state = GoLeft
-                    ant.position = position
-
-                    ant
-                  }
-
-                  rightAnt = {
-                    val ant = new Ant(apply)
-
-                    ant.fatherAnt = this
-                    ant.state = GoRight
-                    ant.position = position
-
-                    ant
-                  }
-                case _ =>
-                  position = np
-                  set += np
-              }
-            }
-
-          case Done =>
+      trait SingleChildState[T <: State[T]] { self: State[T] =>
+        def spawnAnt(): Unit = {
+          childId = Some(VerticalAnt(Some(self.id), self.currentPosition).id)
+          self.stateValue = Wait
         }
 
-      override def toString =
-        (
-          List(
-            (
-              for {
-                y <- (min._2 - 1) to (max._2 + 1)
-              } yield {
-                (
-                  for {
-                    x <- (min._1 - 1) to (max._1 + 1)
-                  } yield { apply((x, y)) }
-                ).mkString("")
-              }
-            ).mkString("\n")
-          ) ++ (
-            if (leftAnt != null)
-              List(leftAnt.toString)
-            else
-              List.empty[String]
-          ) ++ (
-            if (rightAnt != null)
-              List(rightAnt.toString)
-            else
-              List.empty[String]
-          ) ++ (
-            if (downAnt != null)
-              List(downAnt.toString)
-            else
-              List()
-          )
-        ).mkString("\n--------------\n")
+        var childId: Option[Int]
+      }
+
+      trait TwoChildState[T <: State[T]] { self: State[T] =>
+        def spawnAnts(): Unit = {
+          leftChildId = Some(HorizontalAnt(Some(self.id), self.currentPosition, -1).id)
+          rightChildId = Some(HorizontalAnt(Some(self.id), self.currentPosition, +1).id)
+
+          self.stateValue = Wait
+        }
+
+        var leftChildId: Option[Int]
+        var rightChildId: Option[Int]
+      }
+
+      def VerticalAnt(fId: Option[Int], cp: (Int, Int)): GoVerticalState = {
+        val l = ants.collect {
+          case (_, ant: GoVerticalState) if ant.startPosition == cp => ant
+        }
+
+        if (l.isEmpty) {
+          val ant = new GoVerticalState {
+            val id = nextId.next
+            val startPosition = cp
+            val fatherId = fId
+            val visitedPositions = mutable.Set.empty[(Int, Int)]
+
+            var refCount = 1
+            var dy = +1
+            var currentPosition = cp
+            var stateValue = Running
+            var leftChildId: Option[Int] = None
+            var rightChildId: Option[Int] = None
+
+            def run() = ants += (id -> (goDown orElse antsWait orElse goUp orElse done orElse filled)(this))
+          }
+
+          ants += (ant.id -> ant)
+
+          ant
+        } else {
+          val ant = l.head
+          ant.refCount += 1
+          ant
+        }
+      }
+
+      def HorizontalAnt(fId: Option[Int], cp: (Int, Int), d: Int): GoHorizontalState = {
+        val l = ants.collect {
+          case (_, ant: GoHorizontalState) if ant.startPosition == cp && ant.dx == d => ant
+        }
+
+        if (l.isEmpty) {
+          val ant = new GoHorizontalState {
+            val id = nextId.next
+            val startPosition = cp
+            val fatherId = fId
+            val visitedPositions = mutable.Set.empty[(Int, Int)]
+            val dx = d
+
+            var refCount = 1
+            var currentPosition = cp
+            var stateValue = Running
+            var childId: Option[Int] = None
+
+            def run() = ants += (id -> (goHorizontal orElse antWait orElse done orElse blocked)(this))
+          }
+
+          ants += (ant.id -> ant)
+
+          ant
+        } else {
+          val ant = l.head
+          ant.refCount += 1
+          ant
+        }
+      }
+
+      def done[T <: State[T]]: PartialFunction[T, T] = {
+        case state if state.stateValue == Done =>
+          state
+      }
+
+      def blocked[T <: State[T]]: PartialFunction[T, T] = {
+        case state if state.stateValue == Blocked =>
+          state
+      }
+
+      def filled[T <: State[T]]: PartialFunction[T, T] = {
+        case state if state.stateValue == Filled =>
+          state
+      }
+
+      def antWait: PartialFunction[GoHorizontalState, GoHorizontalState] = {
+        case state if state.stateValue == Wait && state.childId != None =>
+          val id = state.childId.get
+
+          val cState = ants(id)
+
+          if (cState.stateValue == Filled) {
+            state.visitedPositions ++= cState.visitedPositions
+
+            cState.dispose()
+
+            state.childId = None
+            state.stateValue = Running
+          } else if (cState.stateValue == Done) {
+            state.visitedPositions ++= cState.visitedPositions
+
+            cState.dispose()
+
+            state.childId = None
+            state.stateValue = Done
+          }
+
+          state
+      }
+
+      def antsWait: PartialFunction[GoVerticalState, GoVerticalState] = {
+        case state if state.stateValue == Wait && state.leftChildId != None && state.rightChildId != None =>
+          val lid = state.leftChildId.get
+          val rid = state.rightChildId.get
+
+          val lState = ants(lid)
+          val rState = ants(rid)
+
+          if (lState.stateValue == Blocked && rState.stateValue == Blocked) {
+            state.visitedPositions ++= (lState.visitedPositions ++ rState.visitedPositions)
+
+            lState.dispose()
+            rState.dispose()
+
+            state.leftChildId = None
+            state.rightChildId = None
+
+            state.dy = -1
+            state.stateValue = Running
+          } else if (lState.stateValue == Blocked && rState.stateValue == Done ||
+                     lState.stateValue == Done && rState.stateValue == Blocked) {
+            state.visitedPositions ++= (lState.visitedPositions ++ rState.visitedPositions)
+
+            lState.dispose()
+            rState.dispose()
+
+            state.leftChildId = None
+            state.rightChildId = None
+
+            state.stateValue = Done
+          } else if (lState.stateValue == Done && rState.stateValue == Done) {
+            state.visitedPositions ++= (lState.visitedPositions ++ rState.visitedPositions)
+
+            lState.dispose()
+            rState.dispose()
+
+            state.leftChildId = None
+            state.rightChildId = None
+
+            state.stateValue = Done
+          }
+
+          state
+      }
+
+      lazy val goHorizontal: PartialFunction[GoHorizontalState, GoHorizontalState] = {
+        case state if state.stateValue == Running =>
+          val down = state.currentPosition + Direction.Down
+          if (state.visitable(down))
+            state.spawnAnt()
+          else {
+            val newCurrentPosition = state.currentPosition + ((state.dx, 0))
+            if (state.visitable(newCurrentPosition)) {
+              state.currentPosition = newCurrentPosition
+              state.visitedPositions += newCurrentPosition
+            } else {
+              state.stateValue = Blocked
+            }
+          }
+
+          state
+      }
+
+      lazy val goDown: PartialFunction[GoVerticalState, GoVerticalState] = {
+        case state if state.stateValue == Running && state.dy == +1 =>
+          val down = state.currentPosition + Direction.Down
+          if (down._2 > g.max._2)
+            state.stateValue = Done
+          else if (state.visitable(down)) {
+            state.currentPosition = down
+            state.visitedPositions += down
+          } else
+            state.spawnAnts()
+
+          state
+      }
+
+      lazy val goUp: PartialFunction[GoVerticalState, GoVerticalState] = {
+        case state if state.stateValue == Running && state.dy == -1 =>
+          val up = state.currentPosition + Direction.Up
+          if (state.currentPosition == state.startPosition)
+            state.stateValue = Filled
+          else {
+            state.currentPosition = up
+            state.dy = +1
+            state.spawnAnts()
+          }
+
+          state
+      }
     }
   }
 
@@ -275,5 +391,13 @@ object Day17 {
         }
     )
 
-  def main(args: Array[String]): Unit = {}
+  def main(args: Array[String]): Unit = {
+    val ground = parse(Source.fromResource("input-17.data").getLines())
+
+    val ant = ground.ant()
+
+    while (!ant.done()) ant.walk()
+
+    println(s"solution 1: ${ant.water()}")
+  }
 }

@@ -64,7 +64,7 @@ lazy val aoc = crossProject(JSPlatform, JVMPlatform)
         val sourceFile = sourceDir / s"${name}.scala"
 
         if (!sourceFile.exists() || sourceFile.lastModified() < resourceFile.lastModified()) {
-          val content = IO.read(resourceFile)
+          val content = IO.read(resourceFile).replace("$", "$$")
 
           val scalaCode = s"""package aoc
 
@@ -102,3 +102,5 @@ lazy val aocJVM = aoc
   )
 
 excludeFilter in unmanagedSources := HiddenFileFilter || ".#*" || "*~"
+
+addCommandAlias("sf", ";aocJVM/scalafmt;aocJVM/test:scalafmt;aocJS/scalafmt")
