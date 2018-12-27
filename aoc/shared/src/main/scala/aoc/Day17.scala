@@ -10,7 +10,8 @@ object Day17 {
     val PrimarySource = "+"
     val Clay = "#"
     val Sand = "."
-    val Water = "~"
+    val Water = "|"
+    val RestWater = "~"
     val AntMark = "@"
   }
 
@@ -36,9 +37,10 @@ object Day17 {
       }
 
     override def toString = {
-      val (visited, ants) = Ant.ants.foldLeft((Set.empty[(Int, Int)], Set.empty[(Int, Int)])) { (acc, p) =>
-        ((acc._1 ++ p._2.visitedPositions), (acc._2 + p._2.currentPosition))
-      }
+      val (visited, rest, ants) =
+        Ant.ants.foldLeft((Set.empty[(Int, Int)], Set.empty[(Int, Int)], Set.empty[(Int, Int)])) { (acc, p) =>
+          ((acc._1 ++ p._2.visitedPositions), (acc._2 ++ p._2.restWater), (acc._3 + p._2.currentPosition))
+        }
 
       (
         for {
@@ -50,6 +52,8 @@ object Day17 {
             } yield {
               if (ants.contains((x, y)))
                 AntMark
+              else if (rest.contains((x, y)))
+                RestWater
               else if (visited.contains((x, y)))
                 Water
               else
@@ -64,6 +68,7 @@ object Day17 {
       def walk(): Unit
       def done(): Boolean
       def water(): Int
+      def restWater(): Int
     }
 
     def ant(): Walk = new Walk {
@@ -83,6 +88,9 @@ object Day17 {
         ant.visitedPositions.filter { p =>
           p._2 >= g.min._2 && p._2 <= g.max._2
         }.size
+
+      def restWater() =
+        ant.restWater.size
     }
 
     object Ant {
@@ -114,6 +122,7 @@ object Day17 {
         val fatherId: Option[Int]
         val startPosition: (Int, Int)
         val visitedPositions: mutable.Set[(Int, Int)]
+        val restWater: mutable.Set[(Int, Int)]
 
         var stateValue: StateValue
         var currentPosition: (Int, Int)
@@ -185,6 +194,7 @@ object Day17 {
             val startPosition = cp
             val fatherId = fId
             val visitedPositions = mutable.Set.empty[(Int, Int)]
+            val restWater = mutable.Set.empty[(Int, Int)]
 
             var refCount = 1
             var dy = +1
@@ -217,6 +227,7 @@ object Day17 {
             val startPosition = cp
             val fatherId = fId
             val visitedPositions = mutable.Set.empty[(Int, Int)]
+            val restWater = mutable.Set.empty[(Int, Int)]
             val dx = d
 
             var refCount = 1
@@ -260,6 +271,7 @@ object Day17 {
 
           if (cState.stateValue == Filled) {
             state.visitedPositions ++= cState.visitedPositions
+            state.restWater ++= cState.restWater
 
             cState.dispose()
 
@@ -267,6 +279,7 @@ object Day17 {
             state.stateValue = Running
           } else if (cState.stateValue == Done) {
             state.visitedPositions ++= cState.visitedPositions
+            state.restWater ++= cState.restWater
 
             cState.dispose()
 
@@ -286,7 +299,10 @@ object Day17 {
           val rState = ants(rid)
 
           if (lState.stateValue == Blocked && rState.stateValue == Blocked) {
-            state.visitedPositions ++= (lState.visitedPositions ++ rState.visitedPositions)
+            val restWater = (lState.visitedPositions ++ rState.visitedPositions) + state.currentPosition
+
+            state.visitedPositions ++= restWater
+            state.restWater ++= restWater
 
             lState.dispose()
             rState.dispose()
@@ -299,6 +315,7 @@ object Day17 {
           } else if (lState.stateValue == Blocked && rState.stateValue == Done ||
                      lState.stateValue == Done && rState.stateValue == Blocked) {
             state.visitedPositions ++= (lState.visitedPositions ++ rState.visitedPositions)
+            state.restWater ++= (lState.restWater ++ rState.restWater)
 
             lState.dispose()
             rState.dispose()
@@ -309,6 +326,7 @@ object Day17 {
             state.stateValue = Done
           } else if (lState.stateValue == Done && rState.stateValue == Done) {
             state.visitedPositions ++= (lState.visitedPositions ++ rState.visitedPositions)
+            state.restWater ++= (lState.restWater ++ rState.restWater)
 
             lState.dispose()
             rState.dispose()
@@ -399,5 +417,6 @@ object Day17 {
     while (!ant.done()) ant.walk()
 
     println(s"solution 1: ${ant.water()}")
+    println(s"solution 2: ${ant.restWater()}")
   }
 }

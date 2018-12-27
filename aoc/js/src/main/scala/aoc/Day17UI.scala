@@ -18,6 +18,7 @@ object Day17UI {
     val canvasHeight = (ground.max._2 - ground.min._2 + 10) * Mag
 
     val waterCount = document.createElement("p").asInstanceOf[html.Paragraph]
+    val restWaterCount = document.createElement("p").asInstanceOf[html.Paragraph]
     val antsCount = document.createElement("p").asInstanceOf[html.Paragraph]
 
     val container = document.createElement("div").asInstanceOf[html.Div]
@@ -30,9 +31,11 @@ object Day17UI {
     canvas.width = canvasWidth.toInt
     canvas.height = canvasHeight.toInt
 
-    document.body.appendChild(waterCount)
-    document.body.appendChild(antsCount)
     container.appendChild(canvas)
+
+    document.body.appendChild(waterCount)
+    document.body.appendChild(restWaterCount)
+    document.body.appendChild(antsCount)
     document.body.appendChild(container)
 
     val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
@@ -49,12 +52,20 @@ object Day17UI {
     def render(): Unit = {
       ant.walk()
 
-      val (visited, ants) = ground.Ant.ants.foldLeft((Set.empty[(Int, Int)], Set.empty[(Int, Int)])) { (acc, p) =>
-        ((acc._1 ++ p._2.visitedPositions), (acc._2 + p._2.currentPosition))
-      }
+      val (visited, rest, ants) =
+        ground.Ant.ants.foldLeft((Set.empty[(Int, Int)], Set.empty[(Int, Int)], Set.empty[(Int, Int)])) { (acc, p) =>
+          (acc._1 ++ p._2.visitedPositions, acc._2 ++ p._2.restWater, acc._3 + p._2.currentPosition)
+        }
 
       ctx.fillStyle = ext.Color.Blue.toHex
       visited.foreach { p =>
+        val x = p._1.toDouble
+        val y = p._2.toDouble
+        ctx.fillRect(x, y, 1, 1)
+      }
+
+      ctx.fillStyle = ext.Color(0, 128, 255).toHex
+      rest.foreach { p =>
         val x = p._1.toDouble
         val y = p._2.toDouble
         ctx.fillRect(x, y, 1, 1)
@@ -68,6 +79,7 @@ object Day17UI {
       }
 
       waterCount.innerHTML = s"Water: ${ant.water} (${visited.size})"
+      restWaterCount.innerHTML = s"Rest Water: ${ant.restWater} (${rest.size})"
       antsCount.innerHTML = s"Ants: ${ants.size}"
 
       if (!ant.done)
@@ -86,7 +98,7 @@ object Day17UI {
         x <- (ground.min._1 - 1) to (ground.max._1 + 1)
       } {
         if (ground(x, y) == GroundElement.Clay) {
-          ctx.fillStyle = ext.Color(128, 0, 0).toHex
+          ctx.fillStyle = ext.Color(128, 0, 64).toHex
           ctx.fillRect(x.toDouble, y.toDouble, 1, 1)
         }
       }

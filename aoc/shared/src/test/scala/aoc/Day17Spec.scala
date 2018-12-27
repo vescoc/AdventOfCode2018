@@ -40,6 +40,7 @@ class Day17Spec extends WordSpec with MustMatchers {
       while (!ant.done) ant.walk()
 
       ant.water() mustBe (57)
+      ant.restWater() mustBe (29)
     }
   }
 }
