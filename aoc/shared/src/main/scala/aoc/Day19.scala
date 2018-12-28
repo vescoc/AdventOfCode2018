@@ -53,17 +53,18 @@ object Day19 {
       result
     }
 
-    def run(r: Registries, istructions: List[Istruction]): Registries = {
+    def run(r: Registries, istructions: List[Istruction], watcher: (Registries, Istruction, Registries) => Boolean = CPU.nopWatcher): Registries = {
       @tailrec
       def execute(r: Registries): Registries =
         if (r.pc < 0 || r.pc >= istructions.size)
           r
         else {
           val i = istructions(r.pc)
-          if (i.opcode == OpCodes.brk)
-            r
+          val post = run(r, i)
+          if (watcher(r, i, post))
+            execute(post)
           else
-            execute(run(r, i))
+            r
         }
 
       execute(r)
@@ -80,6 +81,8 @@ object Day19 {
               (Some(cpu), l :+ Istruction(OpCodes.map(opcode), a.toInt, b.toInt, c.toInt))
           }
         }
+
+    def nopWatcher(pre: Registries, i: Istruction, post: Registries): Boolean = true
   }
 
   sealed trait OpCode {
@@ -105,9 +108,7 @@ object Day19 {
       gtrr,
       eqir,
       eqri,
-      eqrr,
-      nop,
-      brk
+      eqrr
     )
 
     lazy val map = all.map { opcode =>
@@ -130,9 +131,6 @@ object Day19 {
     val eqir: OpCode = AOpCode("eqir", (r, i) => r(i.c) = if (i.a == r(i.b)) 1 else 0)
     val eqri: OpCode = AOpCode("eqri", (r, i) => r(i.c) = if (r(i.a) == i.b) 1 else 0)
     val eqrr: OpCode = AOpCode("eqrr", (r, i) => r(i.c) = if (r(i.a) == r(i.b)) 1 else 0)
-
-    val nop: OpCode = AOpCode("nop", (r, i) => r)
-    val brk: OpCode = AOpCode("brk", (r, i) => r)
 
     private[OpCodes] case class AOpCode(val name: String, f: (Registries, Istruction) => Registries) extends OpCode {
       def run(r: Registries, i: Istruction) = f(r, i)
