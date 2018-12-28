@@ -3,54 +3,65 @@ package aoc
 import scala.annotation.tailrec
 
 object Day20 {
-  object MapElement extends Enumeration {
-    type MapElement = Char
+  type Node = (Int, Int)
+  type Edge = (Node, Node)
 
-    val Unknown = '?'
-    val HorizontalDoor = '-'
-    val VerticalDoor = '|'
-    val Room = '.'
-    val Wall = '#'
-  }
+  def buildGraph(path: String): Graph[Node, Edge] = {
+    val i = path.toIterator
 
-  import MapElement._
-
-  case class RegularMap(position: (Int, Int), map: Map[(Int, Int), MapElement]) {
-    lazy val (min, max) = {
-      implicit class HandleTuple2(t: (Int, Int)) {
-        def min(that: (Int, Int)) = (Math.min(t._1, that._1), Math.min(t._2, that._2))
-        def max(that: (Int, Int)) = (Math.max(t._1, that._1), Math.max(t._2, that._2))
-      }
-
-      map
-        .foldLeft(((Int.MaxValue, Int.MaxValue), (Int.MinValue, Int.MinValue))) { (acc, kv) =>
-          (acc._1 min kv._1, acc._2 max kv._1)
-        }
+    implicit class ExtNode(that: Node) {
+      def +(other: Node) = (that._1 + other._1, that._2 + other._2)
     }
 
-    override def toString: String =
-      (
-        for {
-          y <- min._2 to max._2
-        } yield {
-          (
-            for {
-              x <- min._1 to max._1
-              p = (x, y)
-            } yield {
-              if (position == p)
-                'X'
-              else
-                map.getOrElse((x, y), ' ')
-            }
-          ).map { c =>
-            c match {
-              case Unknown => Wall
-              case _       => c
-            }
-          }.mkString
-        }
-      ).mkString("\n")
+    val directions = Map(
+      'N' -> ((0, +1)),
+      'S' -> ((0, -1)),
+      'E' -> ((+1, 0)),
+      'W' -> ((-1, 0))
+    )
+
+    @tailrec
+    def build(
+      nodes: Set[Node] = Set.empty,
+      edges: Set[Edge] = Set.empty,
+      currentNodes: Set[Node] = Set.empty,
+      currentBranches: List[Node] = List.empty,
+      stack: List[(Set[Node], List[Node])] = List.empty
+    ): Graph[Node, Edge] = {
+      val c = i.next
+      c match {
+        case '^' if stack.isEmpty =>
+          val newCurrentNodes = Set((0, 0))
+          build(nodes ++ newCurrentNodes, edges, newCurrentNodes, currentBranches, stack)
+        case '$' if stack.isEmpty && currentBranches.isEmpty =>
+          Graph(nodes, edges)
+        case 'N' | 'W' | 'S' | 'E' =>
+          val newEdges = currentNodes.map { node =>
+            node -> (node + directions(c))
+          }
+          val newNodes = newEdges.map { edge =>
+            edge._2
+          }
+          build(
+            nodes ++ newNodes,
+            edges ++ newEdges,
+            newNodes,
+            currentBranches,
+            stack
+          )
+        case '(' =>
+          build(nodes, edges, currentNodes, List.empty, (currentNodes, currentBranches) :: stack)
+        case '|' =>
+          val (ns, _) = stack.head
+
+          build(nodes, edges, ns, currentBranches ++ currentNodes, stack)
+        case ')' =>
+          val (_, branches) = stack.head
+          build(nodes, edges, currentBranches.toSet, branches, stack.tail)
+      }
+    }
+
+    build()
   }
 
   def furthest(path: String): Int = {
@@ -102,6 +113,10 @@ object Day20 {
       .getLines()
       .mkString
 
-    println(s"solution 1: ${furthest(input)}")
+    val graph = buildGraph(input)
+    val (costs, _) = graph.dijkstra((0, 0))
+
+    println(s"solution 1: ${costs.maxBy { _._2 }._2}")
+    println(s"solution 2: ${costs.filter { _._2 >= 1000 }.size}")
   }
 }
