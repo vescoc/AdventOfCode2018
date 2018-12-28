@@ -53,7 +53,11 @@ object Day19 {
       result
     }
 
-    def run(r: Registries, istructions: List[Istruction], watcher: (Registries, Istruction, Registries) => Boolean = CPU.nopWatcher): Registries = {
+    def run(
+      r: Registries,
+      istructions: List[Istruction],
+      watcher: (Registries, Istruction, Registries) => Boolean = CPU.nopWatcher
+    ): Registries = {
       @tailrec
       def execute(r: Registries): Registries =
         if (r.pc < 0 || r.pc >= istructions.size)

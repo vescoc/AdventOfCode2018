@@ -20,31 +20,32 @@ object Day21 {
 
       var last = 0
 
-      (pre: Registries, i: Istruction, post: Registries) => {
-        if (true) {
-          if (pre.pc == 28) {
-            val c = count.next
-            val value = pre(1)
-            if (set.contains(value)) {
-              solution2 = last
-              false
-            } else {
-              last = value
-              set += value
-              if (false && c % 100 == 0)
-                println(s"c: $c ${pre} $i ${post}")
+      (pre: Registries, i: Istruction, post: Registries) =>
+        {
+          if (true) {
+            if (pre.pc == 28) {
+              val c = count.next
+              val value = pre(1)
+              if (set.contains(value)) {
+                solution2 = last
+                false
+              } else {
+                last = value
+                set += value
+                if (false && c % 100 == 0)
+                  println(s"c: $c $pre $i $post")
 
-              c <= 20000
+                c <= 20000
+              }
+            } else {
+              true
             }
           } else {
-            true
+            val c = count.next
+            println(s"c: $c $pre $i $post")
+            c <= 2000
           }
-        } else {
-          val c = count.next
-          println(s"c: $c ${pre} $i ${post}")
-          c <= 2000
         }
-      }
     }
 
     cpu.run(Registries(a = 0), istructions, watcher)
